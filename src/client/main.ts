@@ -164,10 +164,8 @@ async function init() {
   // Set up view mode toggle buttons
   setupViewModeToggle();
 
-  // Set up open file button in sidebar
-  document.getElementById("open-file")?.addEventListener("click", () => {
-    document.getElementById("file-input")?.click();
-  });
+  // Set up Open dropdown menu
+  setupOpenMenu();
 
   // Initialize file tree with callback for opening files
   setOnFileOpen((path, content, handle) => {
@@ -224,9 +222,32 @@ function showEmptyState() {
         <polyline points="10 9 9 9 8 9"/>
       </svg>
       <h2>No file open</h2>
-      <p>Use the Explorer sidebar to open a folder, press <kbd>Ctrl+O</kbd> to open a file, or drag and drop files here.</p>
+      <p>Open a markdown file to get started</p>
+      <div class="empty-state-actions">
+        <button class="btn" id="empty-open-file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Open File
+        </button>
+        <button class="btn" id="empty-open-folder">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          Open Folder
+        </button>
+      </div>
     </div>
   `;
+
+  // Wire up empty state buttons
+  document.getElementById("empty-open-file")?.addEventListener("click", () => {
+    document.getElementById("file-input")?.click();
+  });
+  document.getElementById("empty-open-folder")?.addEventListener("click", () => {
+    openDirectory();
+  });
 }
 
 let sidebarVisible = true;
@@ -244,6 +265,35 @@ function toggleSidebar(): void {
 function setupSidebarToggle(): void {
   const toggleBtn = document.getElementById("toggle-sidebar");
   toggleBtn?.addEventListener("click", toggleSidebar);
+}
+
+function setupOpenMenu(): void {
+  const dropdown = document.getElementById("open-dropdown");
+  const trigger = document.getElementById("open-menu-btn");
+  const menuOpenFile = document.getElementById("menu-open-file");
+  const menuOpenFolder = document.getElementById("menu-open-folder");
+
+  // Toggle dropdown on click
+  trigger?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown?.classList.toggle("open");
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", () => {
+    dropdown?.classList.remove("open");
+  });
+
+  // Menu items
+  menuOpenFile?.addEventListener("click", () => {
+    dropdown?.classList.remove("open");
+    document.getElementById("file-input")?.click();
+  });
+
+  menuOpenFolder?.addEventListener("click", () => {
+    dropdown?.classList.remove("open");
+    openDirectory();
+  });
 }
 
 type ViewMode = "split" | "editor" | "preview";
