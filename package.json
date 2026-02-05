@@ -5,8 +5,11 @@
   "private": true,
   "scripts": {
     "dev": "bun run build:client && bun run src/server/index.ts",
-    "build:client": "bun build src/client/main.ts --outdir src/client --outfile main.js --minify",
-    "start": "bun run src/server/index.ts"
+    "build:client": "bun run typecheck && bun build src/client/main.ts --outdir src/client --outfile main.js --minify",
+    "start": "bun run src/server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "bunx @biomejs/biome lint src/",
+    "lint:fix": "bunx @biomejs/biome lint --write src/"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -15,6 +18,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@biomejs/biome": "2.3.11",
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/language": "^6.12.1",
     "@codemirror/state": "^6.5.4",

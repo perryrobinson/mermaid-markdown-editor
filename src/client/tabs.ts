@@ -43,6 +43,7 @@ export class TabManager {
     if (index === -1) return;
 
     const tab = this.tabs[index];
+    if (!tab) return;
 
     // Check if tab is dirty (unless force closing)
     if (tab.dirty && !force) {
@@ -58,7 +59,8 @@ export class TabManager {
     if (this.activeTabId === id) {
       if (this.tabs.length > 0) {
         const newIndex = Math.min(index, this.tabs.length - 1);
-        this.switchToTab(this.tabs[newIndex].id);
+        const nextTab = this.tabs[newIndex];
+        if (nextTab) this.switchToTab(nextTab.id);
       } else {
         this.activeTabId = null;
         if (this.allTabsClosedCallback) {

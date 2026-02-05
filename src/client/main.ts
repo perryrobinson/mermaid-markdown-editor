@@ -395,7 +395,8 @@ function setupViewModeToggle(): void {
       e.preventDefault();
       const modes: ViewMode[] = ["split", "editor", "preview"];
       const nextIndex = (modes.indexOf(currentViewMode) + 1) % modes.length;
-      setViewMode(modes[nextIndex]);
+      const nextMode = modes[nextIndex] ?? "split";
+      setViewMode(nextMode);
     }
   });
 }

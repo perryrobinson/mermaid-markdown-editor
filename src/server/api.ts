@@ -1,4 +1,4 @@
-import { Server } from "bun";
+import type { Server } from "bun";
 import { join, relative, resolve, extname } from "path";
 import { readdir, stat } from "fs/promises";
 

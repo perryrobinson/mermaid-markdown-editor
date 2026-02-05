@@ -1,3 +1,14 @@
+// File System Access API declarations
+declare global {
+  interface Window {
+    showDirectoryPicker?: (options?: { mode?: string }) => Promise<FileSystemDirectoryHandle>;
+  }
+
+  interface FileSystemDirectoryHandle {
+    values(): AsyncIterableIterator<FileSystemHandle>;
+  }
+}
+
 interface TreeNode {
   name: string;
   path: string;
@@ -26,7 +37,7 @@ export async function initFileTree(): Promise<void> {
 }
 
 async function openDirectory(): Promise<void> {
-  if (useNativeApi) {
+  if (useNativeApi && window.showDirectoryPicker) {
     try {
       rootDirectoryHandle = await window.showDirectoryPicker({
         mode: "readwrite",
@@ -132,6 +143,7 @@ function buildTreeFromFiles(files: FileList): TreeNode[] {
     let current = root;
     for (let i = 0; i < pathParts.length; i++) {
       const part = pathParts[i];
+      if (!part) continue;
       const isFile = i === pathParts.length - 1;
       const currentPath = pathParts.slice(0, i + 1).join("/");
 

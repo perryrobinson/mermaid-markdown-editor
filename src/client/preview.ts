@@ -1,5 +1,6 @@
 import mermaid from "mermaid";
-import panzoom, { PanZoom } from "panzoom";
+import panzoom from "panzoom";
+import type { PanZoom } from "panzoom";
 
 // Current mermaid theme
 let currentMermaidTheme: "dark" | "default" = "dark";
@@ -148,7 +149,7 @@ function parseMarkdown(md: string): { html: string; mermaidBlocks: { id: string;
 
   html = html.replace(/(<tr>.*<\/tr>\n?)+/g, (match) => {
     const rows = match.split("<!-- table-separator -->");
-    if (rows.length === 2) {
+    if (rows.length === 2 && rows[0] !== undefined && rows[1] !== undefined) {
       const header = rows[0].replace(/<td>/g, "<th>").replace(/<\/td>/g, "</th>");
       return `<table><thead>${header}</thead><tbody>${rows[1]}</tbody></table>`;
     }

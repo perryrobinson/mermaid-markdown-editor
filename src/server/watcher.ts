@@ -1,4 +1,5 @@
-import { watch, FSWatcher } from "fs";
+import { watch } from "fs";
+import type { FSWatcher } from "fs";
 import { join, relative, extname } from "path";
 import { readdir, stat } from "fs/promises";
 

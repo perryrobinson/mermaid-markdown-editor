@@ -1,8 +1,8 @@
 import type { Server } from "bun";
 
-let serverInstance: Server | null = null;
+let serverInstance: Server<unknown> | null = null;
 
-export function setupWebSocket(server: Server) {
+export function setupWebSocket(server: Server<unknown>) {
   serverInstance = server;
 }
 
