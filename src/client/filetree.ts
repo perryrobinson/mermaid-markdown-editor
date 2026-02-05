@@ -293,8 +293,6 @@ export function setActiveFile(path: string): void {
 function setupSidebarControls(): void {
   const sidebar = document.getElementById("sidebar");
   const sidebarDivider = document.getElementById("sidebar-divider");
-  const toggleBtn = document.getElementById("toggle-sidebar");
-  const showBtn = document.getElementById("show-sidebar");
   const refreshBtn = document.getElementById("refresh-files");
   const openFolderBtn = document.getElementById("open-folder");
   const folderInput = document.getElementById("folder-input") as HTMLInputElement;
@@ -316,17 +314,6 @@ function setupSidebarControls(): void {
 
     // Reset input
     folderInput.value = "";
-  });
-
-  // Toggle sidebar visibility
-  toggleBtn?.addEventListener("click", () => {
-    sidebar?.classList.add("hidden");
-    if (showBtn) showBtn.style.display = "inline-flex";
-  });
-
-  showBtn?.addEventListener("click", () => {
-    sidebar?.classList.remove("hidden");
-    if (showBtn) showBtn.style.display = "none";
   });
 
   // Refresh file tree
@@ -368,6 +355,9 @@ function setupSidebarControls(): void {
     });
   }
 }
+
+// Export openDirectory for keyboard shortcuts
+export { openDirectory };
 
 // Store file handles for saving (only works with File System Access API)
 const fileHandles = new Map<string, FileSystemFileHandle>();

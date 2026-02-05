@@ -4,7 +4,7 @@ import { TabManager } from "./tabs";
 import { setupFileHandlers, loadFileFromPath } from "./files";
 import { setupSync } from "./sync";
 import { setupDivider } from "./divider";
-import { initFileTree, setActiveFile, setOnFileOpen, setFileHandle, getFileHandle } from "./filetree";
+import { initFileTree, setActiveFile, setOnFileOpen, setFileHandle, getFileHandle, openDirectory } from "./filetree";
 
 // Initialize the application
 async function init() {
@@ -136,14 +136,38 @@ async function init() {
 
   // Set up keyboard shortcuts
   document.addEventListener("keydown", (e) => {
+    // Ctrl+S - Save
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
       document.getElementById("save-file")?.click();
     }
+    // Ctrl+O - Open file
+    if ((e.ctrlKey || e.metaKey) && e.key === "o" && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById("file-input")?.click();
+    }
+    // Ctrl+Shift+O - Open folder
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "O") {
+      e.preventDefault();
+      openDirectory();
+    }
+    // Ctrl+B - Toggle sidebar
+    if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+      e.preventDefault();
+      toggleSidebar();
+    }
   });
+
+  // Set up sidebar toggle
+  setupSidebarToggle();
 
   // Set up view mode toggle buttons
   setupViewModeToggle();
+
+  // Set up open file button in sidebar
+  document.getElementById("open-file")?.addEventListener("click", () => {
+    document.getElementById("file-input")?.click();
+  });
 
   // Initialize file tree with callback for opening files
   setOnFileOpen((path, content, handle) => {
@@ -200,9 +224,26 @@ function showEmptyState() {
         <polyline points="10 9 9 9 8 9"/>
       </svg>
       <h2>No file open</h2>
-      <p>Click "File" to open a single file, use the sidebar to browse a folder, or drag and drop files onto this window.</p>
+      <p>Use the Explorer sidebar to open a folder, press <kbd>Ctrl+O</kbd> to open a file, or drag and drop files here.</p>
     </div>
   `;
+}
+
+let sidebarVisible = true;
+
+function toggleSidebar(): void {
+  const sidebar = document.getElementById("sidebar");
+  const toggleBtn = document.getElementById("toggle-sidebar");
+
+  sidebarVisible = !sidebarVisible;
+
+  sidebar?.classList.toggle("hidden", !sidebarVisible);
+  toggleBtn?.classList.toggle("active", sidebarVisible);
+}
+
+function setupSidebarToggle(): void {
+  const toggleBtn = document.getElementById("toggle-sidebar");
+  toggleBtn?.addEventListener("click", toggleSidebar);
 }
 
 type ViewMode = "split" | "editor" | "preview";
