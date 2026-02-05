@@ -210,6 +210,8 @@ let currentViewMode: ViewMode = "split";
 
 function setupViewModeToggle(): void {
   const splitPane = document.getElementById("split-pane")!;
+  const editorPane = document.getElementById("editor-pane")!;
+  const previewPane = document.getElementById("preview-pane")!;
   const splitBtn = document.getElementById("view-split")!;
   const editorBtn = document.getElementById("view-editor")!;
   const previewBtn = document.getElementById("view-preview")!;
@@ -217,6 +219,12 @@ function setupViewModeToggle(): void {
   function setViewMode(mode: ViewMode): void {
     currentViewMode = mode;
     splitPane.classList.remove("editor-only", "preview-only");
+
+    // Clear inline styles set by divider dragging so CSS classes take effect
+    editorPane.style.flex = "";
+    editorPane.style.width = "";
+    previewPane.style.flex = "";
+    previewPane.style.width = "";
 
     if (mode === "editor") {
       splitPane.classList.add("editor-only");
