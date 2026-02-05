@@ -746,15 +746,8 @@ html, body {
 }
 
 .empty-state-actions .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 20px;
   font-size: 14px;
-}
-
-.empty-state-actions .btn svg {
-  flex-shrink: 0;
 }
 
 /* Conflict Dialog */
