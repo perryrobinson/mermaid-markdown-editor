@@ -790,6 +790,53 @@ html, body {
   border-color: var(--accent-hover);
 }
 
+/* Confirm Dialog (close unsaved tab) */
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-content {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.confirm-content h3 {
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.confirm-content p {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-danger {
+  background: var(--error-color);
+  color: #fff;
+  border-color: var(--error-color);
+}
+
+.btn-danger:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

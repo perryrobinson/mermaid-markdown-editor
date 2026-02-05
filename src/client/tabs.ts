@@ -7,11 +7,13 @@ export interface Tab {
 }
 
 type TabSwitchCallback = (tab: Tab) => void;
+type AllTabsClosedCallback = () => void;
 
 export class TabManager {
   private tabs: Tab[] = [];
   private activeTabId: string | null = null;
   private tabSwitchCallback: TabSwitchCallback | null = null;
+  private allTabsClosedCallback: AllTabsClosedCallback | null = null;
   private nextId = 1;
 
   constructor() {
@@ -36,17 +38,18 @@ export class TabManager {
     return tab;
   }
 
-  removeTab(id: string): void {
+  removeTab(id: string, force: boolean = false): void {
     const index = this.tabs.findIndex((t) => t.id === id);
     if (index === -1) return;
 
     const tab = this.tabs[index];
 
-    // Check if tab is dirty
-    if (tab.dirty) {
-      if (!confirm(`"${this.getTabName(tab.path)}" has unsaved changes. Close anyway?`)) {
-        return;
-      }
+    // Check if tab is dirty (unless force closing)
+    if (tab.dirty && !force) {
+      this.showCloseConfirmDialog(tab, () => {
+        this.removeTab(id, true);
+      });
+      return;
     }
 
     this.tabs.splice(index, 1);
@@ -58,11 +61,47 @@ export class TabManager {
         this.switchToTab(this.tabs[newIndex].id);
       } else {
         this.activeTabId = null;
+        if (this.allTabsClosedCallback) {
+          this.allTabsClosedCallback();
+        }
       }
     }
 
     this.saveRecentFiles();
     this.renderTabs();
+  }
+
+  private showCloseConfirmDialog(tab: Tab, onConfirm: () => void): void {
+    const dialog = document.createElement("div");
+    dialog.className = "confirm-dialog";
+    dialog.innerHTML = `
+      <div class="confirm-content">
+        <h3>Unsaved Changes</h3>
+        <p>"${this.getTabName(tab.path)}" has unsaved changes. Close anyway?</p>
+        <div class="confirm-actions">
+          <button class="btn" id="confirm-cancel">Cancel</button>
+          <button class="btn btn-danger" id="confirm-close">Close Without Saving</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    dialog.querySelector("#confirm-cancel")?.addEventListener("click", () => {
+      dialog.remove();
+    });
+
+    dialog.querySelector("#confirm-close")?.addEventListener("click", () => {
+      dialog.remove();
+      onConfirm();
+    });
+
+    // Close on backdrop click
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) {
+        dialog.remove();
+      }
+    });
   }
 
   switchToTab(id: string): void {
@@ -87,6 +126,14 @@ export class TabManager {
 
   onTabSwitch(callback: TabSwitchCallback): void {
     this.tabSwitchCallback = callback;
+  }
+
+  onAllTabsClosed(callback: AllTabsClosedCallback): void {
+    this.allTabsClosedCallback = callback;
+  }
+
+  hasDirtyTabs(): boolean {
+    return this.tabs.some((t) => t.dirty);
   }
 
   updateTabDisplay(): void {

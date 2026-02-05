@@ -35,6 +35,14 @@ async function init() {
     setActiveFile(tab.path);
   });
 
+  // Handle all tabs closed
+  tabManager.onAllTabsClosed(() => {
+    setEditorContent("");
+    showEmptyState();
+    updateFileStatus("saved");
+    setActiveFile("");
+  });
+
   // Set up file handlers
   setupFileHandlers({
     onFileOpen: (path: string, content: string) => {
