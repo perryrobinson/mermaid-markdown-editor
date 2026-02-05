@@ -1,13 +1,31 @@
 import mermaid from "mermaid";
 import panzoom, { PanZoom } from "panzoom";
 
+// Current mermaid theme
+let currentMermaidTheme: "dark" | "default" = "dark";
+
 // Initialize mermaid with dark theme
 mermaid.initialize({
   startOnLoad: false,
-  theme: "dark",
+  theme: currentMermaidTheme,
   securityLevel: "loose",
   fontFamily: "inherit",
 });
+
+export function setMermaidTheme(theme: "light" | "dark"): void {
+  currentMermaidTheme = theme === "dark" ? "dark" : "default";
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: currentMermaidTheme,
+    securityLevel: "loose",
+    fontFamily: "inherit",
+  });
+}
+
+function getThemeBackground(): string {
+  const theme = document.documentElement.getAttribute("data-theme");
+  return theme === "light" ? "#ffffff" : "#1e1e1e";
+}
 
 const panzoomInstances: Map<string, PanZoom> = new Map();
 let diagramCounter = 0;
@@ -192,6 +210,12 @@ export async function renderPreview(content: string): Promise<void> {
         <span class="toolbar-sep"></span>
         <button class="copy-svg" title="Copy SVG to clipboard">Copy</button>
         <button class="download-png" title="Download as PNG">PNG</button>
+        <span class="toolbar-sep"></span>
+        <button class="fullscreen-btn" title="Full Screen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
       </div>
       <div class="mermaid-viewport">
         <div class="mermaid-content"></div>
@@ -246,6 +270,12 @@ export async function renderPreview(content: string): Promise<void> {
         const pngButton = container.querySelector(".download-png") as HTMLButtonElement;
         pngButton?.addEventListener("click", async () => {
           await downloadAsPng(svgElement, id);
+        });
+
+        // Fullscreen button
+        const fullscreenBtn = container.querySelector(".fullscreen-btn") as HTMLButtonElement;
+        fullscreenBtn?.addEventListener("click", () => {
+          openDiagramFullscreen(svgElement, id);
         });
       }
     } catch (error: any) {
@@ -308,7 +338,7 @@ async function downloadAsPng(svg: SVGSVGElement, id: string): Promise<void> {
         canvas.width = width * 2; // 2x for better quality
         canvas.height = height * 2;
         ctx.scale(2, 2);
-        ctx.fillStyle = "#1e1e1e"; // Match dark theme background
+        ctx.fillStyle = getThemeBackground();
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0);
         resolve();
@@ -336,4 +366,94 @@ async function downloadAsPng(svg: SVGSVGElement, id: string): Promise<void> {
     console.error("Failed to download PNG:", error);
     alert("Failed to download PNG");
   }
+}
+
+function openDiagramFullscreen(svg: SVGSVGElement, diagramId: string): void {
+  // Clone SVG without panzoom transforms
+  const cleanSvg = svg.cloneNode(true) as SVGSVGElement;
+  cleanSvg.style.transform = "";
+
+  // Create overlay
+  const overlay = document.createElement("div");
+  overlay.className = "diagram-fullscreen-overlay";
+  overlay.innerHTML = `
+    <div class="fullscreen-header">
+      <div class="fullscreen-toolbar">
+        <button class="zoom-in" title="Zoom In">+</button>
+        <button class="zoom-out" title="Zoom Out">−</button>
+        <button class="zoom-reset" title="Reset">Reset</button>
+        <span class="toolbar-sep"></span>
+        <button class="copy-svg" title="Copy SVG">Copy</button>
+        <button class="download-png" title="Download PNG">PNG</button>
+      </div>
+      <button class="fullscreen-close" title="Close (Esc)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="fullscreen-viewport">
+      <div class="fullscreen-content"></div>
+    </div>
+  `;
+
+  // Insert cloned SVG
+  const contentEl = overlay.querySelector(".fullscreen-content")!;
+  contentEl.appendChild(cleanSvg);
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  // Initialize panzoom
+  const viewport = overlay.querySelector(".fullscreen-viewport") as HTMLElement;
+  const pz = panzoom(contentEl as HTMLElement, {
+    maxZoom: 10,
+    minZoom: 0.1,
+    bounds: false,
+    boundsPadding: 0.1,
+  });
+
+  // Wire up zoom toolbar buttons
+  overlay.querySelector(".zoom-in")?.addEventListener("click", () => {
+    pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 1.25);
+  });
+
+  overlay.querySelector(".zoom-out")?.addEventListener("click", () => {
+    pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 0.8);
+  });
+
+  overlay.querySelector(".zoom-reset")?.addEventListener("click", () => {
+    pz.moveTo(0, 0);
+    pz.zoomAbs(0, 0, 1);
+  });
+
+  // Wire up copy button
+  const copyButton = overlay.querySelector(".copy-svg") as HTMLButtonElement;
+  copyButton?.addEventListener("click", async () => {
+    await copySvgToClipboard(cleanSvg, copyButton);
+  });
+
+  // Wire up PNG button
+  const pngButton = overlay.querySelector(".download-png") as HTMLButtonElement;
+  pngButton?.addEventListener("click", async () => {
+    await downloadAsPng(cleanSvg, diagramId);
+  });
+
+  // Close handler
+  const close = () => {
+    pz.dispose();
+    overlay.remove();
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", handleEsc);
+  };
+
+  overlay.querySelector(".fullscreen-close")?.addEventListener("click", close);
+
+  // ESC key handler
+  const handleEsc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      close();
+    }
+  };
+  document.addEventListener("keydown", handleEsc);
 }

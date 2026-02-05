@@ -1,5 +1,5 @@
 import { createEditor, setEditorContent, getEditorContent, onEditorChange } from "./editor";
-import { renderPreview } from "./preview";
+import { renderPreview, setMermaidTheme } from "./preview";
 import { TabManager } from "./tabs";
 import { setupFileHandlers, loadFileFromPath } from "./files";
 import { setupSync } from "./sync";
@@ -24,12 +24,14 @@ async function init() {
       tabManager.updateTabDisplay();
       updateFileStatus("dirty");
     }
+    setCurrentContent(content);
     renderPreview(content);
   });
 
   // Set up tab switching
   tabManager.onTabSwitch((tab) => {
     setEditorContent(tab.content);
+    setCurrentContent(tab.content);
     renderPreview(tab.content);
     updateFileStatus(tab.dirty ? "dirty" : "saved");
     setActiveFile(tab.path);
@@ -38,6 +40,7 @@ async function init() {
   // Handle all tabs closed
   tabManager.onAllTabsClosed(() => {
     setEditorContent("");
+    setCurrentContent("");
     showEmptyState();
     updateFileStatus("saved");
     setActiveFile("");
@@ -176,6 +179,10 @@ async function init() {
 
   // Set up Open dropdown menu
   setupOpenMenu();
+
+  // Initialize theme
+  initTheme();
+  setupThemeToggle();
 
   // Initialize file tree with callback for opening files
   setOnFileOpen((path, content, handle) => {
@@ -423,6 +430,54 @@ function showConflictDialog(
     onUseRemote();
     dialog.remove();
   });
+}
+
+// Theme toggle functionality
+type Theme = "light" | "dark";
+let currentContent = "";
+
+function initTheme(): void {
+  const saved = localStorage.getItem("theme") as Theme | null;
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved || (prefersDark ? "dark" : "light");
+  applyTheme(theme, false);
+}
+
+function applyTheme(theme: Theme, rerender: boolean = true): void {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+  setMermaidTheme(theme);
+  updateThemeButtonIcon(theme);
+
+  // Re-render preview to apply new mermaid theme
+  if (rerender && currentContent) {
+    renderPreview(currentContent);
+  }
+}
+
+function toggleTheme(): void {
+  const current = document.documentElement.getAttribute("data-theme") as Theme;
+  applyTheme(current === "dark" ? "light" : "dark");
+}
+
+function updateThemeButtonIcon(theme: Theme): void {
+  const darkIcon = document.querySelector(".theme-icon-dark") as HTMLElement;
+  const lightIcon = document.querySelector(".theme-icon-light") as HTMLElement;
+
+  if (darkIcon && lightIcon) {
+    darkIcon.style.display = theme === "dark" ? "inline-block" : "none";
+    lightIcon.style.display = theme === "light" ? "inline-block" : "none";
+  }
+}
+
+function setupThemeToggle(): void {
+  const themeToggle = document.getElementById("theme-toggle");
+  themeToggle?.addEventListener("click", toggleTheme);
+}
+
+// Store current content for re-rendering on theme change
+function setCurrentContent(content: string): void {
+  currentContent = content;
 }
 
 // Initialize when DOM is ready

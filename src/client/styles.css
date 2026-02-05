@@ -21,6 +21,19 @@
   --divider-width: 4px;
 }
 
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #eeeeee;
+  --bg-hover: #e0e0e0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border-color: #d0d0d0;
+  --accent-color: #0277bd;
+  --accent-hover: #01579b;
+}
+
 html, body {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
@@ -861,4 +874,115 @@ html, body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Theme Toggle Icons */
+[data-theme="dark"] .theme-icon-dark,
+:root:not([data-theme]) .theme-icon-dark {
+  display: inline-block;
+}
+
+[data-theme="dark"] .theme-icon-light,
+:root:not([data-theme]) .theme-icon-light {
+  display: none;
+}
+
+[data-theme="light"] .theme-icon-dark {
+  display: none;
+}
+
+[data-theme="light"] .theme-icon-light {
+  display: inline-block !important;
+}
+
+/* Diagram Full-Screen Overlay */
+.diagram-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.fullscreen-toolbar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.fullscreen-toolbar button {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fullscreen-toolbar button:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-color);
+}
+
+.fullscreen-toolbar .toolbar-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 8px;
+}
+
+.fullscreen-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fullscreen-close:hover {
+  background: var(--error-color);
+  border-color: var(--error-color);
+  color: #fff;
+}
+
+.fullscreen-viewport {
+  flex: 1;
+  overflow: hidden;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-viewport:active {
+  cursor: grabbing;
+}
+
+.fullscreen-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-content svg {
+  max-width: 90vw;
+  max-height: 85vh;
 }
