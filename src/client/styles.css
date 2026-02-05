@@ -967,9 +967,7 @@ html, body {
   flex: 1;
   overflow: hidden;
   cursor: grab;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
 }
 
 .fullscreen-viewport:active {
@@ -977,12 +975,6 @@ html, body {
 }
 
 .fullscreen-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fullscreen-content svg {
-  max-width: 90vw;
-  max-height: 85vh;
+  position: absolute;
+  transform-origin: 0 0;
 }

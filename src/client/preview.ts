@@ -413,6 +413,28 @@ function openDiagramFullscreen(svg: SVGSVGElement, diagramId: string): void {
     boundsPadding: 0.1,
   });
 
+  // Center the diagram initially (after a frame so dimensions are available)
+  requestAnimationFrame(() => {
+    const svgRect = cleanSvg.getBoundingClientRect();
+    const viewportRect = viewport.getBoundingClientRect();
+    const x = (viewportRect.width - svgRect.width) / 2;
+    const y = (viewportRect.height - svgRect.height) / 2;
+    pz.moveTo(x, y);
+  });
+
+  // Helper to get center position for reset
+  const getCenterPosition = () => {
+    const svgRect = cleanSvg.getBoundingClientRect();
+    const transform = pz.getTransform();
+    const naturalWidth = svgRect.width / transform.scale;
+    const naturalHeight = svgRect.height / transform.scale;
+    const viewportRect = viewport.getBoundingClientRect();
+    return {
+      x: (viewportRect.width - naturalWidth) / 2,
+      y: (viewportRect.height - naturalHeight) / 2,
+    };
+  };
+
   // Wire up zoom toolbar buttons
   overlay.querySelector(".zoom-in")?.addEventListener("click", () => {
     pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 1.25);
@@ -423,8 +445,9 @@ function openDiagramFullscreen(svg: SVGSVGElement, diagramId: string): void {
   });
 
   overlay.querySelector(".zoom-reset")?.addEventListener("click", () => {
-    pz.moveTo(0, 0);
+    const center = getCenterPosition();
     pz.zoomAbs(0, 0, 1);
+    pz.moveTo(center.x, center.y);
   });
 
   // Wire up copy button
