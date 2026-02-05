@@ -4,6 +4,7 @@ import { TabManager } from "./tabs";
 import { setupFileHandlers, loadFileFromPath } from "./files";
 import { setupSync } from "./sync";
 import { setupDivider } from "./divider";
+import { initFileTree, setActiveFile, setOnFileOpen, setFileHandle, getFileHandle } from "./filetree";
 
 // Initialize the application
 async function init() {
@@ -31,6 +32,7 @@ async function init() {
     setEditorContent(tab.content);
     renderPreview(tab.content);
     updateFileStatus(tab.dirty ? "dirty" : "saved");
+    setActiveFile(tab.path);
   });
 
   // Set up file handlers
@@ -39,6 +41,7 @@ async function init() {
       const existingTab = tabManager.findTabByPath(path);
       if (existingTab) {
         tabManager.switchToTab(existingTab.id);
+        setActiveFile(path);
         return;
       }
 
@@ -46,6 +49,7 @@ async function init() {
       setEditorContent(content);
       renderPreview(content);
       updateFileStatus("saved");
+      setActiveFile(path);
     },
     onFileSave: async () => {
       const activeTab = tabManager.getActiveTab();
@@ -53,23 +57,38 @@ async function init() {
 
       try {
         updateFileStatus("syncing");
-        const response = await fetch("/api/file", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            path: activeTab.path,
-            content: activeTab.content,
-          }),
-        });
 
-        if (response.ok) {
-          const data = await response.json();
+        // Check if we have a file handle (from File System Access API)
+        const handle = getFileHandle(activeTab.path);
+        if (handle) {
+          // Save using File System Access API
+          const writable = await handle.createWritable();
+          await writable.write(activeTab.content);
+          await writable.close();
+
           activeTab.dirty = false;
-          activeTab.mtime = data.mtime;
           tabManager.updateTabDisplay();
           updateFileStatus("saved");
         } else {
-          throw new Error("Failed to save");
+          // Fall back to server API
+          const response = await fetch("/api/file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              path: activeTab.path,
+              content: activeTab.content,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            activeTab.dirty = false;
+            activeTab.mtime = data.mtime;
+            tabManager.updateTabDisplay();
+            updateFileStatus("saved");
+          } else {
+            throw new Error("Failed to save");
+          }
         }
       } catch (error) {
         console.error("Save failed:", error);
@@ -123,15 +142,30 @@ async function init() {
     }
   });
 
-  // Set up toggle preview button
-  document.getElementById("toggle-preview")?.addEventListener("click", () => {
-    const previewPane = document.getElementById("preview-pane");
-    const divider = document.getElementById("divider");
-    previewPane?.classList.toggle("hidden");
-    if (divider) {
-      divider.style.display = previewPane?.classList.contains("hidden") ? "none" : "block";
+  // Set up view mode toggle buttons
+  setupViewModeToggle();
+
+  // Initialize file tree with callback for opening files
+  setOnFileOpen((path, content, handle) => {
+    const existingTab = tabManager.findTabByPath(path);
+    if (existingTab) {
+      tabManager.switchToTab(existingTab.id);
+      setActiveFile(path);
+      return;
     }
+
+    // Store handle for saving later (if available - only with File System Access API)
+    if (handle) {
+      setFileHandle(path, handle);
+    }
+
+    const tab = tabManager.addTab(path, content);
+    setEditorContent(content);
+    renderPreview(content);
+    updateFileStatus("saved");
+    setActiveFile(path);
   });
+  initFileTree();
 
   // Show empty state initially
   showEmptyState();
@@ -166,9 +200,49 @@ function showEmptyState() {
         <polyline points="10 9 9 9 8 9"/>
       </svg>
       <h2>No file open</h2>
-      <p>Click "Open" to select a markdown file, or drag and drop a file onto this window.</p>
+      <p>Click "File" to open a single file, use the sidebar to browse a folder, or drag and drop files onto this window.</p>
     </div>
   `;
+}
+
+type ViewMode = "split" | "editor" | "preview";
+let currentViewMode: ViewMode = "split";
+
+function setupViewModeToggle(): void {
+  const splitPane = document.getElementById("split-pane")!;
+  const splitBtn = document.getElementById("view-split")!;
+  const editorBtn = document.getElementById("view-editor")!;
+  const previewBtn = document.getElementById("view-preview")!;
+
+  function setViewMode(mode: ViewMode): void {
+    currentViewMode = mode;
+    splitPane.classList.remove("editor-only", "preview-only");
+
+    if (mode === "editor") {
+      splitPane.classList.add("editor-only");
+    } else if (mode === "preview") {
+      splitPane.classList.add("preview-only");
+    }
+
+    // Update button active states
+    splitBtn.classList.toggle("active", mode === "split");
+    editorBtn.classList.toggle("active", mode === "editor");
+    previewBtn.classList.toggle("active", mode === "preview");
+  }
+
+  splitBtn.addEventListener("click", () => setViewMode("split"));
+  editorBtn.addEventListener("click", () => setViewMode("editor"));
+  previewBtn.addEventListener("click", () => setViewMode("preview"));
+
+  // Keyboard shortcut: Ctrl/Cmd+\ to cycle modes
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+      e.preventDefault();
+      const modes: ViewMode[] = ["split", "editor", "preview"];
+      const nextIndex = (modes.indexOf(currentViewMode) + 1) % modes.length;
+      setViewMode(modes[nextIndex]);
+    }
+  });
 }
 
 function showConflictDialog(

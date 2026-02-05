@@ -189,6 +189,9 @@ export async function renderPreview(content: string): Promise<void> {
         <button class="zoom-in" title="Zoom In">+</button>
         <button class="zoom-out" title="Zoom Out">−</button>
         <button class="zoom-reset" title="Reset">Reset</button>
+        <span class="toolbar-sep"></span>
+        <button class="copy-svg" title="Copy SVG to clipboard">Copy</button>
+        <button class="download-png" title="Download as PNG">PNG</button>
       </div>
       <div class="mermaid-viewport">
         <div class="mermaid-content"></div>
@@ -233,11 +236,104 @@ export async function renderPreview(content: string): Promise<void> {
           pz.moveTo(0, 0);
           pz.zoomAbs(0, 0, 1);
         });
+
+        // Export controls
+        const copyButton = container.querySelector(".copy-svg") as HTMLButtonElement;
+        copyButton?.addEventListener("click", async () => {
+          await copySvgToClipboard(svgElement, copyButton);
+        });
+
+        const pngButton = container.querySelector(".download-png") as HTMLButtonElement;
+        pngButton?.addEventListener("click", async () => {
+          await downloadAsPng(svgElement, id);
+        });
       }
     } catch (error: any) {
       mermaidContent.innerHTML = `<div class="mermaid-error">Error rendering diagram:\n${error.message || error}</div>`;
     }
 
     placeholder.replaceWith(container);
+  }
+}
+
+async function copySvgToClipboard(svg: SVGSVGElement, button: HTMLButtonElement): Promise<void> {
+  try {
+    const svgClone = svg.cloneNode(true) as SVGSVGElement;
+    // Remove any transform applied by panzoom
+    svgClone.style.transform = "";
+    await navigator.clipboard.writeText(svgClone.outerHTML);
+
+    // Brief visual feedback
+    const originalText = button.textContent;
+    button.textContent = "Copied!";
+    setTimeout(() => {
+      button.textContent = originalText;
+    }, 1500);
+  } catch (error) {
+    console.error("Failed to copy SVG:", error);
+    alert("Failed to copy to clipboard");
+  }
+}
+
+async function downloadAsPng(svg: SVGSVGElement, id: string): Promise<void> {
+  try {
+    // Clone the SVG to avoid modifying the original
+    const svgClone = svg.cloneNode(true) as SVGSVGElement;
+    svgClone.style.transform = "";
+
+    // Get dimensions
+    const bbox = svg.getBBox();
+    const width = Math.ceil(bbox.width + 40);
+    const height = Math.ceil(bbox.height + 40);
+
+    // Set explicit dimensions on the clone
+    svgClone.setAttribute("width", String(width));
+    svgClone.setAttribute("height", String(height));
+
+    // Serialize SVG to string
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgClone);
+
+    // Create blob and URL
+    const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    // Create canvas and draw
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    const img = new Image();
+
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => {
+        canvas.width = width * 2; // 2x for better quality
+        canvas.height = height * 2;
+        ctx.scale(2, 2);
+        ctx.fillStyle = "#1e1e1e"; // Match dark theme background
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        resolve();
+      };
+      img.onerror = reject;
+      img.src = svgUrl;
+    });
+
+    // Convert to PNG and download
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        throw new Error("Failed to create PNG");
+      }
+      const pngUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = pngUrl;
+      link.download = `${id}.png`;
+      link.click();
+
+      // Clean up
+      URL.revokeObjectURL(svgUrl);
+      URL.revokeObjectURL(pngUrl);
+    }, "image/png");
+  } catch (error) {
+    console.error("Failed to download PNG:", error);
+    alert("Failed to download PNG");
   }
 }
