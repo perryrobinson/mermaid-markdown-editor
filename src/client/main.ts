@@ -50,6 +50,7 @@ async function init() {
       if (existingTab) {
         tabManager.switchToTab(existingTab.id);
         setActiveFile(path);
+        restoreEditingMode();
         return;
       }
 
@@ -58,6 +59,7 @@ async function init() {
       renderPreview(content);
       updateFileStatus("saved");
       setActiveFile(path);
+      restoreEditingMode();
     },
     onFileSave: async () => {
       const activeTab = tabManager.getActiveTab();
@@ -181,6 +183,7 @@ async function init() {
     if (existingTab) {
       tabManager.switchToTab(existingTab.id);
       setActiveFile(path);
+      restoreEditingMode();
       return;
     }
 
@@ -194,6 +197,7 @@ async function init() {
     renderPreview(content);
     updateFileStatus("saved");
     setActiveFile(path);
+    restoreEditingMode();
   });
   initFileTree();
 
@@ -237,17 +241,21 @@ function showEmptyState() {
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
-          Open File
+          <span>Open File</span>
         </button>
         <button class="btn" id="empty-open-folder">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
           </svg>
-          Open Folder
+          <span>Open Folder</span>
         </button>
       </div>
     </div>
   `;
+
+  // Switch to preview-only mode when empty (no editor needed)
+  setViewMode("preview");
+  setViewModeButtonsEnabled(false);
 
   // Wire up empty state buttons
   document.getElementById("empty-open-file")?.addEventListener("click", () => {
@@ -306,36 +314,69 @@ function setupOpenMenu(): void {
 
 type ViewMode = "split" | "editor" | "preview";
 let currentViewMode: ViewMode = "split";
+let viewModeElements: {
+  splitPane: HTMLElement;
+  editorPane: HTMLElement;
+  previewPane: HTMLElement;
+  splitBtn: HTMLElement;
+  editorBtn: HTMLElement;
+  previewBtn: HTMLElement;
+} | null = null;
+
+function setViewMode(mode: ViewMode): void {
+  if (!viewModeElements) return;
+  const { splitPane, editorPane, previewPane, splitBtn, editorBtn, previewBtn } = viewModeElements;
+
+  currentViewMode = mode;
+  splitPane.classList.remove("editor-only", "preview-only");
+
+  // Clear inline styles set by divider dragging so CSS classes take effect
+  editorPane.style.flex = "";
+  editorPane.style.width = "";
+  previewPane.style.flex = "";
+  previewPane.style.width = "";
+
+  if (mode === "editor") {
+    splitPane.classList.add("editor-only");
+  } else if (mode === "preview") {
+    splitPane.classList.add("preview-only");
+  }
+
+  // Update button active states
+  splitBtn.classList.toggle("active", mode === "split");
+  editorBtn.classList.toggle("active", mode === "editor");
+  previewBtn.classList.toggle("active", mode === "preview");
+}
+
+function setViewModeButtonsEnabled(enabled: boolean): void {
+  if (!viewModeElements) return;
+  const { splitBtn, editorBtn, previewBtn } = viewModeElements;
+
+  splitBtn.classList.toggle("disabled", !enabled);
+  editorBtn.classList.toggle("disabled", !enabled);
+  previewBtn.classList.toggle("disabled", !enabled);
+
+  (splitBtn as HTMLButtonElement).disabled = !enabled;
+  (editorBtn as HTMLButtonElement).disabled = !enabled;
+  (previewBtn as HTMLButtonElement).disabled = !enabled;
+}
+
+function restoreEditingMode(): void {
+  setViewModeButtonsEnabled(true);
+  setViewMode("split");
+}
 
 function setupViewModeToggle(): void {
-  const splitPane = document.getElementById("split-pane")!;
-  const editorPane = document.getElementById("editor-pane")!;
-  const previewPane = document.getElementById("preview-pane")!;
-  const splitBtn = document.getElementById("view-split")!;
-  const editorBtn = document.getElementById("view-editor")!;
-  const previewBtn = document.getElementById("view-preview")!;
+  viewModeElements = {
+    splitPane: document.getElementById("split-pane")!,
+    editorPane: document.getElementById("editor-pane")!,
+    previewPane: document.getElementById("preview-pane")!,
+    splitBtn: document.getElementById("view-split")!,
+    editorBtn: document.getElementById("view-editor")!,
+    previewBtn: document.getElementById("view-preview")!,
+  };
 
-  function setViewMode(mode: ViewMode): void {
-    currentViewMode = mode;
-    splitPane.classList.remove("editor-only", "preview-only");
-
-    // Clear inline styles set by divider dragging so CSS classes take effect
-    editorPane.style.flex = "";
-    editorPane.style.width = "";
-    previewPane.style.flex = "";
-    previewPane.style.width = "";
-
-    if (mode === "editor") {
-      splitPane.classList.add("editor-only");
-    } else if (mode === "preview") {
-      splitPane.classList.add("preview-only");
-    }
-
-    // Update button active states
-    splitBtn.classList.toggle("active", mode === "split");
-    editorBtn.classList.toggle("active", mode === "editor");
-    previewBtn.classList.toggle("active", mode === "preview");
-  }
+  const { splitBtn, editorBtn, previewBtn } = viewModeElements;
 
   splitBtn.addEventListener("click", () => setViewMode("split"));
   editorBtn.addEventListener("click", () => setViewMode("editor"));
