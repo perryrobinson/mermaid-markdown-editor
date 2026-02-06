@@ -35,8 +35,9 @@ function parseMarkdown(md: string): { html: string; mermaidBlocks: { id: string;
   let html = md;
 
   // Extract mermaid blocks FIRST (before HTML escaping ruins the arrows)
+  // Support both plain mermaid and mermaid with YAML frontmatter
   const mermaidBlocks: { id: string; code: string }[] = [];
-  html = html.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
+  html = html.replace(/```mermaid\s*\n([\s\S]*?)```/g, (_, code) => {
     const id = `mermaid-${++diagramCounter}`;
     mermaidBlocks.push({ id, code: code.trim() });
     return `%%%MERMAID_${id}%%%`;
