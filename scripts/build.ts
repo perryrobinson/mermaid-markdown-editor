@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, copyFileSync, mkdirSync, existsSync } from "fs";
 import { execSync } from "child_process";
 import { resolve } from "path";
 
@@ -21,7 +21,10 @@ try {
 
   // Create dist directory
   console.log("Creating dist directory...");
-  execSync("mkdir -p dist", { cwd: projectRoot });
+  const distPath = resolve(projectRoot, "dist");
+  if (!existsSync(distPath)) {
+    mkdirSync(distPath, { recursive: true });
+  }
 
   // Build executable
   const outputFile = `dist/${name}-v${version}-${platform}${ext}`;
@@ -31,10 +34,13 @@ try {
     { cwd: projectRoot, stdio: "inherit" }
   );
 
-  // Create a latest symlink/copy
+  // Create a latest copy
   const latestFile = `dist/${name}-latest-${platform}${ext}`;
-  console.log(`Creating latest symlink...`);
-  execSync(`cp ${outputFile} ${latestFile}`, { cwd: projectRoot });
+  console.log(`Creating latest copy...`);
+  copyFileSync(
+    resolve(projectRoot, outputFile),
+    resolve(projectRoot, latestFile)
+  );
 
   console.log(`✓ Build complete!`);
   console.log(`  Versioned: ${outputFile}`);
