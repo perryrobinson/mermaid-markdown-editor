@@ -5,39 +5,62 @@ A local browser-based tool for viewing and editing markdown files containing mer
 ## Quick Start
 
 ```bash
-bun run dev      # Build client and start server
-bun run start    # Start server (assumes client is built)
+bun install        # Install all workspace dependencies
+bun run dev        # Start API server (:3000) + Vite dev server (:5173)
 ```
 
-Opens at http://localhost:3000
+- Development: open http://localhost:5173 (Vite proxies API/WebSocket to :3000)
+- Production: `bun run build && bun run start` → http://localhost:3000
 
 ## Project Structure
 
+Bun workspace monorepo with two packages:
+
 ```
-src/
-├── server/
-│   ├── index.ts      # Main entry, starts HTTP server
-│   ├── api.ts        # REST endpoints + static file serving
-│   ├── websocket.ts  # WebSocket for real-time sync
-│   └── watcher.ts    # File system watcher
-└── client/
-    ├── index.html    # Main HTML shell
-    ├── styles.css    # All styling
-    ├── main.ts       # App initialization (entry point)
-    ├── editor.ts     # CodeMirror 6 setup
-    ├── preview.ts    # Markdown + Mermaid rendering + pan/zoom
-    ├── tabs.ts       # Tab management
-    ├── files.ts      # File picker + drag-drop
-    ├── sync.ts       # WebSocket client
-    └── divider.ts    # Resizable split pane
+packages/
+├── server/                    # Bun + Hono API server
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+│       ├── index.ts           # Bun.serve() — dev/prod modes
+│       ├── api.ts             # REST endpoints (Hono)
+│       ├── websocket.ts       # WebSocket broadcasting
+│       └── watcher.ts         # File system watcher
+│
+└── spa/                       # React SPA (Vite + Tailwind CSS v4)
+    ├── package.json
+    ├── tsconfig.json
+    ├── vite.config.ts         # React + Tailwind plugins, proxy config
+    ├── index.html
+    └── src/
+        ├── main.tsx           # ReactDOM entry
+        ├── styles/app.css     # Tailwind @theme tokens + dark mode overrides
+        ├── app/
+        │   ├── App.tsx        # Root: ThemeProvider > WebSocketProvider > AppLayout
+        │   ├── providers/     # ThemeProvider, WebSocketProvider
+        │   └── layout/        # AppLayout (main orchestrator)
+        ├── components/ui/     # Shared UI: Dialog
+        ├── features/
+        │   ├── editor/        # CodeMirror wrapper (useCodeMirror, CodeEditor)
+        │   ├── preview/       # react-markdown + MermaidDiagram + fullscreen + svg-export
+        │   ├── tabs/          # useTabManager + TabBar
+        │   ├── file-tree/     # useDirectoryPicker + FileTree
+        │   ├── files/         # useDragDrop + DropOverlay
+        │   └── toolbar/       # Toolbar, OpenMenu, FileStatus
+        ├── hooks/             # useTheme, useWebSocket, useKeyboardShortcuts, useResizable, useLocalStorage
+        ├── lib/               # api.ts (fetch wrappers), codemirror-setup.ts
+        └── types/             # file.ts, global.d.ts
 ```
 
 ## Tech Stack
 
 - **Runtime**: Bun
+- **Server**: Hono
+- **Client**: React 19, Vite 6, Tailwind CSS v4
 - **Editor**: CodeMirror 6
-- **Diagrams**: Mermaid.js
-- **Pan/Zoom**: svg-pan-zoom
+- **Markdown**: react-markdown + remark-gfm
+- **Diagrams**: Mermaid.js + svg-pan-zoom
+- **Icons**: lucide-react
 
 ## API Endpoints
 
@@ -46,10 +69,16 @@ src/
 - `POST /api/file` - Write file (body: `{path, content}`)
 - `WS /ws` - WebSocket for file change notifications
 
-## Build
+## Scripts
 
 ```bash
-bun run build:client   # Bundle client TypeScript → main.js
+bun run dev          # Start both dev servers (API + Vite)
+bun run dev:server   # Start API server only (:3000)
+bun run dev:spa      # Start Vite dev server only (:5173)
+bun run build        # Build SPA for production
+bun run start        # Start server in production mode (serves built SPA)
+bun run typecheck    # Typecheck both packages
+bun run lint         # Lint all packages
 ```
 
 ## Bun Preferences

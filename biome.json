@@ -8,14 +8,11 @@
 	"files": {
 		"ignoreUnknown": false,
 		"includes": [
-			"src/**/*.ts",
-			"src/**/*.tsx",
-			"src/**/*.js",
-			"src/**/*.jsx",
-			"*.ts",
-			"*.tsx",
-			"*.js",
-			"*.jsx",
+			"packages/**/*.ts",
+			"packages/**/*.tsx",
+			"packages/**/*.js",
+			"packages/**/*.jsx",
+			"scripts/**/*.ts",
 			"*.json"
 		]
 	},
