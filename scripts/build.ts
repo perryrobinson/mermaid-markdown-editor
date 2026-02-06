@@ -15,9 +15,9 @@ const ext = platform === "windows" ? ".exe" : "";
 console.log(`Building ${name} v${version} for ${platform}...`);
 
 try {
-  // Build client
-  console.log("Building client...");
-  execSync("bun run build:client", { cwd: projectRoot, stdio: "inherit" });
+  // Typecheck
+  console.log("Running typecheck...");
+  execSync("bun run typecheck", { cwd: projectRoot, stdio: "inherit" });
 
   // Create dist/bin directory
   console.log("Creating dist/bin directory...");
@@ -26,7 +26,7 @@ try {
     mkdirSync(distPath, { recursive: true });
   }
 
-  // Build executable
+  // Build executable (bun build --compile follows the HTML import and bundles frontend automatically)
   const outputFile = `dist/bin/${name}-v${version}-${platform}${ext}`;
   console.log(`Compiling to ${outputFile}...`);
   execSync(
