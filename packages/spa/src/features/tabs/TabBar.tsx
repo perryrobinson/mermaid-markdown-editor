@@ -39,6 +39,7 @@ export function TabBar({ tabs, activeTabId, onSwitch, onClose }: TabBarProps) {
 							{getTabName(tab.path)}
 						</span>
 						<button
+							type="button"
 							aria-label={`Close ${getTabName(tab.path)}`}
 							className="flex items-center justify-center w-[18px] h-[18px] rounded bg-transparent border-none cursor-pointer opacity-60 hover:opacity-100 hover:bg-bg-hover transition-all"
 							onClick={(e) => {

@@ -43,6 +43,7 @@ export function Toolbar({
 			<div className="flex items-center gap-2">
 				<OpenMenu onOpenFile={onOpenFile} onOpenFolder={onOpenFolder} />
 				<button
+					type="button"
 					onClick={onSave}
 					className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent border border-accent rounded-md text-white text-sm cursor-pointer hover:bg-accent-hover hover:border-accent-hover transition-colors"
 					title="Save (Ctrl+S)"
@@ -55,6 +56,7 @@ export function Toolbar({
 			</div>
 			<div className="flex items-center gap-2">
 				<button
+					type="button"
 					onClick={onToggleTheme}
 					className="inline-flex items-center justify-center w-8 h-8 bg-transparent border-none rounded-md text-text-secondary cursor-pointer hover:bg-bg-hover hover:text-text-primary transition-colors"
 					title="Toggle Theme"
@@ -62,6 +64,7 @@ export function Toolbar({
 					{theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
 				</button>
 				<button
+					type="button"
 					onClick={onToggleSidebar}
 					className={`inline-flex items-center justify-center w-8 h-8 border-none rounded-md cursor-pointer transition-colors ${
 						sidebarVisible
@@ -118,6 +121,7 @@ function ViewModeButton({
 }) {
 	return (
 		<button
+			type="button"
 			onClick={onClick}
 			disabled={disabled}
 			title={title}

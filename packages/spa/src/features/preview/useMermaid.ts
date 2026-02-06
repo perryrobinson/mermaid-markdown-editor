@@ -3,8 +3,6 @@ import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 import type { Theme } from "@/types/file";
 
-let initialized = false;
-
 function initMermaid(theme: Theme) {
 	mermaid.initialize({
 		startOnLoad: false,
@@ -12,7 +10,6 @@ function initMermaid(theme: Theme) {
 		securityLevel: "loose",
 		fontFamily: "inherit",
 	});
-	initialized = true;
 }
 
 export function useMermaid(code: string, theme: Theme) {

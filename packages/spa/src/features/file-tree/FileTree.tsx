@@ -37,6 +37,7 @@ export function FileTree({
 			<div className="p-5 text-center text-text-muted text-sm">
 				<p className="mb-3">No folder open</p>
 				<button
+					type="button"
 					onClick={onOpenDirectory}
 					className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent border-none rounded-md text-white text-xs font-medium cursor-pointer hover:bg-accent-hover transition-colors"
 				>

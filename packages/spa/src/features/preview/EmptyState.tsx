@@ -19,6 +19,7 @@ export function EmptyState({ onOpenFile, onOpenFolder }: EmptyStateProps) {
 			</p>
 			<div className="flex gap-3">
 				<button
+					type="button"
 					onClick={onOpenFile}
 					className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent border-none rounded-lg text-white text-sm cursor-pointer hover:bg-accent-hover transition-colors"
 				>
@@ -26,6 +27,7 @@ export function EmptyState({ onOpenFile, onOpenFolder }: EmptyStateProps) {
 					Open File
 				</button>
 				<button
+					type="button"
 					onClick={onOpenFolder}
 					className="inline-flex items-center gap-2 px-5 py-2.5 bg-bg-tertiary border-none rounded-lg text-text-primary text-sm cursor-pointer hover:bg-bg-hover transition-colors"
 				>

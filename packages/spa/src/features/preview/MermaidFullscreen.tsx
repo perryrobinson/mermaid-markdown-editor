@@ -113,6 +113,7 @@ export function MermaidFullscreen({
 					</FsButton>
 				</div>
 				<button
+					type="button"
 					onClick={onClose}
 					title="Close (Esc)"
 					className="flex items-center justify-center w-9 h-9 bg-bg-tertiary border border-border rounded text-text-primary cursor-pointer hover:bg-error hover:border-error hover:text-white transition-colors"
@@ -137,6 +138,7 @@ function FsButton({
 }) {
 	return (
 		<button
+			type="button"
 			onClick={onClick}
 			title={title}
 			className="flex items-center gap-1.5 px-3 py-1.5 bg-transparent border-none rounded-md text-text-primary text-sm cursor-pointer hover:bg-bg-hover transition-colors"

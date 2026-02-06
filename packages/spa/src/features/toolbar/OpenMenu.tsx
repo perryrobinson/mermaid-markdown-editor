@@ -23,6 +23,7 @@ export function OpenMenu({ onOpenFile, onOpenFolder }: OpenMenuProps) {
 	return (
 		<div ref={ref} className="relative">
 			<button
+				type="button"
 				onClick={(e) => {
 					e.stopPropagation();
 					setOpen(!open);
@@ -39,6 +40,7 @@ export function OpenMenu({ onOpenFile, onOpenFolder }: OpenMenuProps) {
 					style={{ boxShadow: "0 4px 16px var(--color-shadow-lg)" }}
 				>
 					<button
+						type="button"
 						onClick={() => {
 							setOpen(false);
 							onOpenFile();
@@ -52,6 +54,7 @@ export function OpenMenu({ onOpenFile, onOpenFolder }: OpenMenuProps) {
 						</span>
 					</button>
 					<button
+						type="button"
 						onClick={() => {
 							setOpen(false);
 							onOpenFolder();
