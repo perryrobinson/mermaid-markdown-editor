@@ -32,16 +32,33 @@ async function getMarkdownFiles(dir: string): Promise<string[]> {
 }
 
 async function serveStatic(pathname: string): Promise<Response | null> {
-  // Try serving from src/client for HTML/CSS/JS
-  const clientPaths = [
-    join(import.meta.dir, "../client", pathname),
-    join(import.meta.dir, "../client", pathname + ".html"),
-    join(import.meta.dir, "../client/index.html"),
+  // Determine the public directory path
+  // Try multiple locations to support both dev and compiled modes
+  const publicDirCandidates = [
+    join(import.meta.dir, "../../public"),           // dev mode (from src/server/)
+    join(import.meta.dir, "../public"),              // compiled mode variant 1
+    join(process.cwd(), "public"),                   // cwd/public (running from project root)
+    join(process.cwd(), "../public"),                // parent directory
   ];
+  
+  let publicDir: string | null = null;
+  
+  // Find the first existing public directory
+  for (const candidate of publicDirCandidates) {
+    const file = Bun.file(join(candidate, "index.html"));
+    if (await file.exists()) {
+      publicDir = candidate;
+      break;
+    }
+  }
+  
+  if (!publicDir) {
+    return null; // No public directory found
+  }
 
   // For root path, serve index.html
   if (pathname === "/" || pathname === "") {
-    const indexPath = join(import.meta.dir, "../client/index.html");
+    const indexPath = join(publicDir, "index.html");
     const file = Bun.file(indexPath);
     if (await file.exists()) {
       return new Response(file, {
@@ -51,7 +68,7 @@ async function serveStatic(pathname: string): Promise<Response | null> {
   }
 
   // Try direct path match
-  const filePath = join(import.meta.dir, "../client", pathname);
+  const filePath = join(publicDir, pathname);
   const file = Bun.file(filePath);
   if (await file.exists()) {
     const ext = extname(pathname);
@@ -207,12 +224,20 @@ export function createServer(port: number) {
       }
 
       // Fallback to index.html for SPA routing
-      const indexPath = join(import.meta.dir, "../client/index.html");
-      const file = Bun.file(indexPath);
-      if (await file.exists()) {
-        return new Response(file, {
-          headers: { "Content-Type": "text/html" },
-        });
+      const publicDirCandidates = [
+        join(import.meta.dir, "../../public"),
+        join(import.meta.dir, "../public"),
+        join(process.cwd(), "public"),
+        join(process.cwd(), "../public"),
+      ];
+      
+      for (const candidate of publicDirCandidates) {
+        const indexFile = Bun.file(join(candidate, "index.html"));
+        if (await indexFile.exists()) {
+          return new Response(indexFile, {
+            headers: { "Content-Type": "text/html" },
+          });
+        }
       }
 
       return new Response("Not found", { status: 404 });
