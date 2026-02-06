@@ -1,12 +1,13 @@
 {
   "name": "mermaid-markdown-editor",
+  "version": "0.1.0",
   "module": "src/server/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "bun run build:client && bun run src/server/index.ts",
     "build:client": "bun run typecheck && bun build src/client/main.ts --outdir public --outfile main.js --minify",
-    "build:dist": "bun run build:client && bun build --compile src/server/index.ts --outfile mermaid-editor",
+    "build:dist": "bun scripts/build.ts",
     "start": "bun run src/server/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "bunx @biomejs/biome lint src/",

@@ -1,0 +1,45 @@
+import { readFileSync } from "fs";
+import { execSync } from "child_process";
+import { resolve } from "path";
+
+const projectRoot = resolve(import.meta.dir, "..");
+const packageJsonPath = resolve(projectRoot, "package.json");
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+const version = packageJson.version;
+const name = packageJson.name;
+
+// Detect platform
+const platform = process.platform === "darwin" ? "macos" : process.platform === "win32" ? "windows" : "linux";
+const ext = platform === "windows" ? ".exe" : "";
+
+console.log(`Building ${name} v${version} for ${platform}...`);
+
+try {
+  // Build client
+  console.log("Building client...");
+  execSync("bun run build:client", { cwd: projectRoot, stdio: "inherit" });
+
+  // Create dist directory
+  console.log("Creating dist directory...");
+  execSync("mkdir -p dist", { cwd: projectRoot });
+
+  // Build executable
+  const outputFile = `dist/${name}-v${version}-${platform}${ext}`;
+  console.log(`Compiling to ${outputFile}...`);
+  execSync(
+    `bun build --compile src/server/index.ts --outfile ${outputFile}`,
+    { cwd: projectRoot, stdio: "inherit" }
+  );
+
+  // Create a latest symlink/copy
+  const latestFile = `dist/${name}-latest-${platform}${ext}`;
+  console.log(`Creating latest symlink...`);
+  execSync(`cp ${outputFile} ${latestFile}`, { cwd: projectRoot });
+
+  console.log(`✓ Build complete!`);
+  console.log(`  Versioned: ${outputFile}`);
+  console.log(`  Latest:    ${latestFile}`);
+} catch (error) {
+  console.error("Build failed:", error);
+  process.exit(1);
+}
