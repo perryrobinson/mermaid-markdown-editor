@@ -2,7 +2,7 @@ import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 
 // Current mermaid theme
-let currentMermaidTheme: "dark" | "default" = "dark";
+let currentMermaidTheme: "dark" | "default" = "default";
 
 // Initialize mermaid with dark theme
 mermaid.initialize({

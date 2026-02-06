@@ -320,7 +320,7 @@ function setupOpenMenu(): void {
 }
 
 type ViewMode = "split" | "editor" | "preview";
-let currentViewMode: ViewMode = "split";
+let currentViewMode: ViewMode = "preview";
 let viewModeElements: {
   splitPane: HTMLElement;
   editorPane: HTMLElement;
@@ -370,7 +370,7 @@ function setViewModeButtonsEnabled(enabled: boolean): void {
 
 function restoreEditingMode(): void {
   setViewModeButtonsEnabled(true);
-  setViewMode("split");
+  setViewMode("preview");
 }
 
 function setupViewModeToggle(): void {
@@ -439,8 +439,7 @@ let currentContent = "";
 
 function initTheme(): void {
   const saved = localStorage.getItem("theme") as Theme | null;
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const theme = saved || (prefersDark ? "dark" : "light");
+  const theme = saved || "light";
   applyTheme(theme, false);
 }
 
