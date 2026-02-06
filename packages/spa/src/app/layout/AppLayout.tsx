@@ -311,14 +311,14 @@ export function AppLayout() {
 				{sidebarVisible && (
 					<>
 						<aside
-							className="bg-bg-secondary border-r border-border flex flex-col overflow-hidden"
+							className="bg-bg-sidebar border-r border-border flex flex-col overflow-hidden"
 							style={{
 								width: sidebarWidth,
 								minWidth: 180,
 								maxWidth: 400,
 							}}
 						>
-							<div className="flex justify-between items-center px-3 py-2 bg-bg-tertiary border-b border-border text-xs font-semibold uppercase tracking-wide text-text-secondary">
+							<div className="flex justify-between items-center px-3 py-2 border-b border-border text-[11px] font-semibold uppercase tracking-wider text-text-muted">
 								<span>Explorer</span>
 								<div className="flex gap-1">
 									{hasDirectory && (
@@ -367,6 +367,7 @@ export function AppLayout() {
 							<CodeEditor
 								ref={editorRef}
 								onChange={handleEditorChange}
+								theme={theme}
 							/>
 						</div>
 					)}

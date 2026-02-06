@@ -139,7 +139,7 @@ function FsButton({
 		<button
 			onClick={onClick}
 			title={title}
-			className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-tertiary border border-border rounded text-text-primary text-sm cursor-pointer hover:bg-bg-hover hover:border-accent transition-colors"
+			className="flex items-center gap-1.5 px-3 py-1.5 bg-transparent border-none rounded-md text-text-primary text-sm cursor-pointer hover:bg-bg-hover transition-colors"
 		>
 			{children}
 		</button>

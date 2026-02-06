@@ -38,8 +38,9 @@ export function FileTree({
 				<p className="mb-3">No folder open</p>
 				<button
 					onClick={onOpenDirectory}
-					className="px-3 py-1.5 bg-accent border-none rounded text-black text-xs font-medium cursor-pointer hover:bg-accent-hover transition-colors"
+					className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent border-none rounded-md text-white text-xs font-medium cursor-pointer hover:bg-accent-hover transition-colors"
 				>
+					<FolderOpen size={14} />
 					Open Folder
 				</button>
 			</div>
@@ -141,7 +142,7 @@ function TreeNodeItem({
 		<div
 			className={`flex items-center py-1 px-3 cursor-pointer text-sm whitespace-nowrap overflow-hidden text-ellipsis transition-colors ${
 				isActive
-					? "bg-bg-tertiary text-accent"
+					? "bg-accent-subtle text-accent"
 					: "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
 			}`}
 			style={{ paddingLeft: `${12 + depth * 16}px` }}

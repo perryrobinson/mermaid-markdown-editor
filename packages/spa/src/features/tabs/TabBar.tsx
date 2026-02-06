@@ -12,15 +12,15 @@ export function TabBar({ tabs, activeTabId, onSwitch, onClose }: TabBarProps) {
 	if (tabs.length === 0) return null;
 
 	return (
-		<div className="flex bg-bg-secondary border-b border-border overflow-x-auto">
+		<div className="flex bg-bg-tertiary border-b border-border overflow-x-auto">
 			<div className="flex min-h-[35px]">
 				{tabs.map((tab) => (
 					<div
 						key={tab.id}
-						className={`flex items-center gap-2 px-3 border-r border-border text-sm cursor-pointer whitespace-nowrap max-w-[200px] transition-colors ${
+						className={`flex items-center gap-2 px-3 border-r border-border-subtle text-sm cursor-pointer whitespace-nowrap max-w-[200px] transition-colors ${
 							tab.id === activeTabId
-								? "bg-bg-primary text-text-primary border-b-2 border-b-accent"
-								: "bg-bg-tertiary text-text-secondary hover:bg-bg-hover"
+								? "bg-bg-primary text-text-primary border-t-2 border-t-accent"
+								: "bg-bg-secondary text-text-secondary hover:bg-bg-hover"
 						}`}
 						onClick={() => onSwitch(tab.id)}
 						onAuxClick={(e) => {
@@ -38,15 +38,16 @@ export function TabBar({ tabs, activeTabId, onSwitch, onClose }: TabBarProps) {
 							)}
 							{getTabName(tab.path)}
 						</span>
-						<span
-							className="flex items-center justify-center w-[18px] h-[18px] rounded opacity-60 hover:opacity-100 hover:bg-bg-hover transition-all"
+						<button
+							aria-label={`Close ${getTabName(tab.path)}`}
+							className="flex items-center justify-center w-[18px] h-[18px] rounded bg-transparent border-none cursor-pointer opacity-60 hover:opacity-100 hover:bg-bg-hover transition-all"
 							onClick={(e) => {
 								e.stopPropagation();
 								onClose(tab.id);
 							}}
 						>
 							<X size={12} />
-						</span>
+						</button>
 					</div>
 				))}
 			</div>

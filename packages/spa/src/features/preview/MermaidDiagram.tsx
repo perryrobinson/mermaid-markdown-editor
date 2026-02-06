@@ -101,7 +101,7 @@ function ToolbarButton({
 		<button
 			onClick={onClick}
 			title={title}
-			className="flex items-center gap-1 px-2 py-1 bg-bg-secondary border border-border rounded text-text-secondary text-xs cursor-pointer hover:bg-bg-hover hover:text-text-primary transition-colors"
+			className="flex items-center gap-1 px-2 py-1 bg-transparent border-none rounded-md text-text-secondary text-xs cursor-pointer hover:bg-bg-hover hover:text-text-primary transition-colors"
 		>
 			{children}
 		</button>

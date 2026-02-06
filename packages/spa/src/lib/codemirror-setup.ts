@@ -3,29 +3,33 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
+import type { Theme } from "@/types/file";
 
 export function createEditorState(
 	doc: string,
 	onChange: (content: string) => void,
 	isExternalUpdate: { current: boolean },
+	theme: Theme = "dark",
 ): EditorState {
-	return EditorState.create({
-		doc,
-		extensions: [
-			basicSetup,
-			markdown(),
-			oneDark,
-			EditorView.updateListener.of((update) => {
-				if (update.docChanged && !isExternalUpdate.current) {
-					onChange(update.state.doc.toString());
-				}
-			}),
-			EditorView.theme({
-				"&": { height: "100%" },
-				".cm-scroller": { overflow: "auto" },
-			}),
-		],
-	});
+	const extensions: Extension[] = [
+		basicSetup,
+		markdown(),
+		EditorView.updateListener.of((update) => {
+			if (update.docChanged && !isExternalUpdate.current) {
+				onChange(update.state.doc.toString());
+			}
+		}),
+		EditorView.theme({
+			"&": { height: "100%" },
+			".cm-scroller": { overflow: "auto" },
+		}),
+	];
+
+	if (theme === "dark") {
+		extensions.push(oneDark);
+	}
+
+	return EditorState.create({ doc, extensions });
 }
 
 export function setContent(
