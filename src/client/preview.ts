@@ -1,6 +1,5 @@
 import mermaid from "mermaid";
-import panzoom from "panzoom";
-import type { PanZoom } from "panzoom";
+import svgPanZoom from "svg-pan-zoom";
 
 // Current mermaid theme
 let currentMermaidTheme: "dark" | "default" = "dark";
@@ -28,7 +27,7 @@ function getThemeBackground(): string {
   return theme === "light" ? "#ffffff" : "#1e1e1e";
 }
 
-const panzoomInstances: Map<string, PanZoom> = new Map();
+const spzInstances: Map<string, SvgPanZoom.Instance> = new Map();
 let diagramCounter = 0;
 
 // Simple markdown to HTML converter
@@ -186,11 +185,11 @@ export async function renderPreview(content: string): Promise<void> {
   const previewElement = document.getElementById("preview");
   if (!previewElement) return;
 
-  // Clean up old panzoom instances
-  for (const instance of panzoomInstances.values()) {
-    instance.dispose();
+  // Clean up old svg-pan-zoom instances
+  for (const instance of spzInstances.values()) {
+    instance.destroy();
   }
-  panzoomInstances.clear();
+  spzInstances.clear();
 
   // Parse markdown
   const { html, mermaidBlocks } = parseMarkdown(content);
@@ -218,48 +217,55 @@ export async function renderPreview(content: string): Promise<void> {
           </svg>
         </button>
       </div>
-      <div class="mermaid-viewport">
-        <div class="mermaid-content"></div>
-      </div>
+      <div class="mermaid-viewport"></div>
     `;
 
-    const mermaidContent = container.querySelector(".mermaid-content")!;
+    const viewport = container.querySelector(".mermaid-viewport") as HTMLElement;
 
     try {
       const { svg } = await mermaid.render(id, code);
-      mermaidContent.innerHTML = svg;
 
-      // Setup panzoom
-      const viewport = container.querySelector(".mermaid-viewport") as HTMLElement;
-      const svgElement = mermaidContent.querySelector("svg") as SVGSVGElement;
+      // Parse SVG and configure for svg-pan-zoom
+      const temp = document.createElement("div");
+      temp.innerHTML = svg;
+      const svgElement = temp.querySelector("svg") as SVGSVGElement;
 
       if (svgElement) {
-        // Center the diagram
-        svgElement.style.transformOrigin = "center center";
+        // Let svg-pan-zoom handle sizing — match mermaid live editor approach
+        svgElement.setAttribute("height", "100%");
+        svgElement.style.maxWidth = "100%";
 
-        const pz = panzoom(mermaidContent as HTMLElement, {
+        // SVG must be in the DOM before svg-pan-zoom init
+        viewport.appendChild(svgElement);
+        placeholder.replaceWith(container);
+
+        const spz = svgPanZoom(svgElement, {
+          fit: true,
+          center: true,
+          controlIconsEnabled: false,
           maxZoom: 5,
           minZoom: 0.1,
-          bounds: false,
-          boundsPadding: 0.1,
+          zoomScaleSensitivity: 0.3,
+          panEnabled: true,
+          zoomEnabled: true,
         });
 
-        panzoomInstances.set(id, pz);
+        spzInstances.set(id, spz);
 
         // Toolbar controls
         container.querySelector(".zoom-in")?.addEventListener("click", () => {
-          const transform = pz.getTransform();
-          pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 1.25);
+          spz.zoomIn();
         });
 
         container.querySelector(".zoom-out")?.addEventListener("click", () => {
-          const transform = pz.getTransform();
-          pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 0.8);
+          spz.zoomOut();
         });
 
         container.querySelector(".zoom-reset")?.addEventListener("click", () => {
-          pz.moveTo(0, 0);
-          pz.zoomAbs(0, 0, 1);
+          spz.resetZoom();
+          spz.resetPan();
+          spz.fit();
+          spz.center();
         });
 
         // Export controls
@@ -278,20 +284,44 @@ export async function renderPreview(content: string): Promise<void> {
         fullscreenBtn?.addEventListener("click", () => {
           openDiagramFullscreen(svgElement, id);
         });
+
+        continue; // skip the replaceWith below since we already did it
       }
     } catch (error: any) {
-      mermaidContent.innerHTML = `<div class="mermaid-error">Error rendering diagram:\n${error.message || error}</div>`;
+      viewport.innerHTML = `<div class="mermaid-error">Error rendering diagram:\n${error.message || error}</div>`;
     }
 
     placeholder.replaceWith(container);
   }
 }
 
+function cleanSvgForExport(svg: SVGSVGElement): SVGSVGElement {
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+
+  // Remove svg-pan-zoom's viewport transform wrapper
+  // svg-pan-zoom adds a <g> with class "svg-pan-zoom_viewport" that has a transform
+  const viewport = clone.querySelector(".svg-pan-zoom_viewport");
+  if (viewport) {
+    viewport.removeAttribute("transform");
+    // Also reset any style transform
+    (viewport as SVGGElement).style.transform = "";
+  }
+
+  // Remove any control icons added by svg-pan-zoom
+  const controls = clone.getElementById("svg-pan-zoom-controls");
+  if (controls) {
+    controls.remove();
+  }
+
+  // Remove inline style transforms from the root SVG
+  clone.style.transform = "";
+
+  return clone;
+}
+
 async function copySvgToClipboard(svg: SVGSVGElement, button: HTMLButtonElement): Promise<void> {
   try {
-    const svgClone = svg.cloneNode(true) as SVGSVGElement;
-    // Remove any transform applied by panzoom
-    svgClone.style.transform = "";
+    const svgClone = cleanSvgForExport(svg);
     await navigator.clipboard.writeText(svgClone.outerHTML);
 
     // Brief visual feedback
@@ -308,9 +338,7 @@ async function copySvgToClipboard(svg: SVGSVGElement, button: HTMLButtonElement)
 
 async function downloadAsPng(svg: SVGSVGElement, id: string): Promise<void> {
   try {
-    // Clone the SVG to avoid modifying the original
-    const svgClone = svg.cloneNode(true) as SVGSVGElement;
-    svgClone.style.transform = "";
+    const svgClone = cleanSvgForExport(svg);
 
     // Get dimensions
     const bbox = svg.getBBox();
@@ -370,9 +398,10 @@ async function downloadAsPng(svg: SVGSVGElement, id: string): Promise<void> {
 }
 
 function openDiagramFullscreen(svg: SVGSVGElement, diagramId: string): void {
-  // Clone SVG without panzoom transforms
-  const cleanSvg = svg.cloneNode(true) as SVGSVGElement;
-  cleanSvg.style.transform = "";
+  // Clone SVG and clean it for fresh pan/zoom
+  const cleanSvg = cleanSvgForExport(svg);
+  cleanSvg.setAttribute("height", "100%");
+  cleanSvg.style.maxWidth = "100%";
 
   // Create overlay
   const overlay = document.createElement("div");
@@ -394,61 +423,41 @@ function openDiagramFullscreen(svg: SVGSVGElement, diagramId: string): void {
         </svg>
       </button>
     </div>
-    <div class="fullscreen-viewport">
-      <div class="fullscreen-content"></div>
-    </div>
+    <div class="fullscreen-viewport"></div>
   `;
 
-  // Insert cloned SVG
-  const contentEl = overlay.querySelector(".fullscreen-content")!;
-  contentEl.appendChild(cleanSvg);
+  // Insert SVG directly into viewport (no wrapper div)
+  const fullscreenViewport = overlay.querySelector(".fullscreen-viewport")!;
+  fullscreenViewport.appendChild(cleanSvg);
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
 
-  // Initialize panzoom
-  const viewport = overlay.querySelector(".fullscreen-viewport") as HTMLElement;
-  const pz = panzoom(contentEl as HTMLElement, {
+  // Initialize svg-pan-zoom (SVG is now in the DOM)
+  const spz = svgPanZoom(cleanSvg, {
+    fit: true,
+    center: true,
+    controlIconsEnabled: false,
     maxZoom: 10,
     minZoom: 0.1,
-    bounds: false,
-    boundsPadding: 0.1,
+    zoomScaleSensitivity: 0.3,
+    panEnabled: true,
+    zoomEnabled: true,
   });
-
-  // Center the diagram initially (after a frame so dimensions are available)
-  requestAnimationFrame(() => {
-    const svgRect = cleanSvg.getBoundingClientRect();
-    const viewportRect = viewport.getBoundingClientRect();
-    const x = (viewportRect.width - svgRect.width) / 2;
-    const y = (viewportRect.height - svgRect.height) / 2;
-    pz.moveTo(x, y);
-  });
-
-  // Helper to get center position for reset
-  const getCenterPosition = () => {
-    const svgRect = cleanSvg.getBoundingClientRect();
-    const transform = pz.getTransform();
-    const naturalWidth = svgRect.width / transform.scale;
-    const naturalHeight = svgRect.height / transform.scale;
-    const viewportRect = viewport.getBoundingClientRect();
-    return {
-      x: (viewportRect.width - naturalWidth) / 2,
-      y: (viewportRect.height - naturalHeight) / 2,
-    };
-  };
 
   // Wire up zoom toolbar buttons
   overlay.querySelector(".zoom-in")?.addEventListener("click", () => {
-    pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 1.25);
+    spz.zoomIn();
   });
 
   overlay.querySelector(".zoom-out")?.addEventListener("click", () => {
-    pz.smoothZoom(viewport.clientWidth / 2, viewport.clientHeight / 2, 0.8);
+    spz.zoomOut();
   });
 
   overlay.querySelector(".zoom-reset")?.addEventListener("click", () => {
-    const center = getCenterPosition();
-    pz.zoomAbs(0, 0, 1);
-    pz.moveTo(center.x, center.y);
+    spz.resetZoom();
+    spz.resetPan();
+    spz.fit();
+    spz.center();
   });
 
   // Wire up copy button
@@ -465,7 +474,7 @@ function openDiagramFullscreen(svg: SVGSVGElement, diagramId: string): void {
 
   // Close handler
   const close = () => {
-    pz.dispose();
+    spz.destroy();
     overlay.remove();
     document.body.style.overflow = "";
     document.removeEventListener("keydown", handleEsc);

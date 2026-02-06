@@ -678,11 +678,6 @@ html, body {
   cursor: grabbing;
 }
 
-.mermaid-viewport svg {
-  display: block;
-  margin: 20px auto;
-}
-
 .mermaid-error {
   padding: 16px;
   color: var(--error-color);
@@ -967,14 +962,8 @@ html, body {
   flex: 1;
   overflow: hidden;
   cursor: grab;
-  position: relative;
 }
 
 .fullscreen-viewport:active {
   cursor: grabbing;
-}
-
-.fullscreen-content {
-  position: absolute;
-  transform-origin: 0 0;
 }

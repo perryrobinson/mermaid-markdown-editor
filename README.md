@@ -5,11 +5,20 @@ A local browser-based tool for viewing and editing markdown files containing mer
 ## Quick Start
 
 ```bash
+bun install
 bun run dev      # Build client and start server
-bun run start    # Start server (assumes client is built)
 ```
 
 Opens at http://localhost:3000
+
+## Scripts
+
+```bash
+bun run dev            # Build client + start server
+bun run start          # Start server (assumes client is already built)
+bun run build:client   # Bundle client TypeScript + copy static assets to public/
+bun run build:dist     # Build standalone single-file executable
+```
 
 ## Project Structure
 
@@ -34,10 +43,10 @@ src/
 
 ## Tech Stack
 
-- **Runtime**: Bun
+- **Runtime**: [Bun](https://bun.sh)
 - **Editor**: CodeMirror 6
 - **Diagrams**: Mermaid.js
-- **Pan/Zoom**: svg-pan-zoom
+- **Pan/Zoom**: svg-pan-zoom (crisp vector rendering at all zoom levels)
 
 ## API Endpoints
 
@@ -45,18 +54,3 @@ src/
 - `GET /api/file?path=...` - Read file content
 - `POST /api/file` - Write file (body: `{path, content}`)
 - `WS /ws` - WebSocket for file change notifications
-
-## Build
-
-```bash
-bun run build:client   # Bundle client TypeScript → main.js
-```
-
-## Bun Preferences
-
-Default to using Bun instead of Node.js.
-
-- Use `bun <file>` instead of `node <file>`
-- Use `bun test` instead of jest/vitest
-- Use `Bun.serve()` for HTTP/WebSocket (not express)
-- Use `Bun.file()` for file operations
