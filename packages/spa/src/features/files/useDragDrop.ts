@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export function useDragDrop(
 	onDrop: (files: File[]) => void,

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { join, relative, resolve } from "node:path";
-import { readdir, stat } from "node:fs/promises";
+import { join, relative, resolve } from "path";
+import { readdir, stat } from "fs/promises";
 
 const app = new Hono();
 
@@ -27,7 +27,7 @@ app.get("/api/files", async (c) => {
   try {
     const files = await getMarkdownFiles(process.cwd());
     return c.json({ files });
-  } catch {
+  } catch (error) {
     return c.json({ error: "Failed to list files" }, 500);
   }
 });
@@ -52,7 +52,7 @@ app.get("/api/file", async (c) => {
     const content = await file.text();
     const stats = await stat(absolutePath);
     return c.json({ content, mtime: stats.mtime.getTime() });
-  } catch {
+  } catch (error) {
     return c.json({ error: "Failed to read file" }, 500);
   }
 });
@@ -74,7 +74,7 @@ app.post("/api/file", async (c) => {
     await Bun.write(absolutePath, content);
     const stats = await stat(absolutePath);
     return c.json({ success: true, mtime: stats.mtime.getTime() });
-  } catch {
+  } catch (error) {
     return c.json({ error: "Failed to write file" }, 500);
   }
 });

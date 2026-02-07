@@ -1,7 +1,7 @@
-import { watch } from "node:fs";
-import type { FSWatcher } from "node:fs";
-import { join, relative, extname } from "node:path";
-import { readdir } from "node:fs/promises";
+import { watch } from "fs";
+import type { FSWatcher } from "fs";
+import { join, relative, extname } from "path";
+import { readdir, stat } from "fs/promises";
 
 type WatchCallback = (filePath: string, content: string) => void;
 
@@ -42,7 +42,7 @@ async function handleFileChange(absolutePath: string, relativePath: string) {
 
 function watchDir(dirPath: string, baseDir: string) {
   try {
-    const watcher = watch(dirPath, async (_eventType, filename) => {
+    const watcher = watch(dirPath, async (eventType, filename) => {
       if (!filename) return;
 
       const ext = extname(filename);

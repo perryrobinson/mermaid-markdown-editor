@@ -35,22 +35,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
 	const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
 		null,
 	);
-	const connectRef = useRef<() => void>(null);
-
-	const scheduleReconnect = useCallback(() => {
-		if (reconnectTimerRef.current) return;
-		if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) return;
-
-		reconnectAttemptsRef.current++;
-		const delay =
-			RECONNECT_DELAY *
-			Math.min(reconnectAttemptsRef.current, 5);
-
-		reconnectTimerRef.current = setTimeout(() => {
-			reconnectTimerRef.current = null;
-			connectRef.current?.();
-		}, delay);
-	}, []);
 
 	const connect = useCallback(() => {
 		if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -93,9 +77,22 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
 		};
 
 		wsRef.current = ws;
-	}, [scheduleReconnect]);
+	}, []);
 
-	connectRef.current = connect;
+	const scheduleReconnect = useCallback(() => {
+		if (reconnectTimerRef.current) return;
+		if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) return;
+
+		reconnectAttemptsRef.current++;
+		const delay =
+			RECONNECT_DELAY *
+			Math.min(reconnectAttemptsRef.current, 5);
+
+		reconnectTimerRef.current = setTimeout(() => {
+			reconnectTimerRef.current = null;
+			connect();
+		}, delay);
+	}, [connect]);
 
 	useEffect(() => {
 		connect();

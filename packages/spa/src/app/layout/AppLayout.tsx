@@ -92,7 +92,7 @@ export function AppLayout() {
 				fileHandles.set(path, handle);
 			}
 
-			addTab(path, content, mtime);
+			const tab = addTab(path, content, mtime);
 			editorRef.current?.setContent(content);
 			setCurrentContent(content);
 			setFileStatus("saved");
@@ -104,7 +104,6 @@ export function AppLayout() {
 	);
 
 	// --- Tab switch handler ---
-	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally depend on activeTabId only to sync editor on tab switch
 	useEffect(() => {
 		if (activeTab) {
 			editorRef.current?.setContent(activeTab.content);
@@ -324,7 +323,6 @@ export function AppLayout() {
 								<div className="flex gap-1">
 									{hasDirectory && (
 										<button
-											type="button"
 											onClick={refreshTree}
 											className="flex items-center justify-center w-6 h-6 bg-transparent border-none rounded text-text-secondary cursor-pointer hover:bg-bg-hover hover:text-text-primary transition-colors"
 											title="Refresh"
@@ -451,14 +449,12 @@ export function AppLayout() {
 					</p>
 					<div className="flex gap-3 justify-end">
 						<button
-							type="button"
 							onClick={() => setConflictDialog(null)}
 							className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-tertiary border border-border rounded text-text-primary text-sm cursor-pointer hover:bg-bg-hover transition-colors"
 						>
 							Keep My Changes
 						</button>
 						<button
-							type="button"
 							onClick={() => {
 								updateTab(conflictDialog.tabId, {
 									content: conflictDialog.remoteContent,
@@ -497,14 +493,12 @@ export function AppLayout() {
 					</p>
 					<div className="flex gap-3 justify-end">
 						<button
-							type="button"
 							onClick={() => setCloseConfirm(null)}
 							className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-tertiary border border-border rounded text-text-primary text-sm cursor-pointer hover:bg-bg-hover transition-colors"
 						>
 							Cancel
 						</button>
 						<button
-							type="button"
 							onClick={() => {
 								removeTab(closeConfirm.tabId);
 								setCloseConfirm(null);

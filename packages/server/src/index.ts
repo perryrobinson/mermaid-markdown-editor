@@ -9,7 +9,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 if (isProd) {
 	const { serveStatic } = await import("hono/bun");
-	const { resolve } = await import("node:path");
+	const { resolve } = await import("path");
 	const spaDistPath = resolve(import.meta.dir, "../../../packages/spa/dist");
 
 	// Serve static assets from SPA build
@@ -37,7 +37,7 @@ const server = Bun.serve({
 		open(ws) {
 			ws.subscribe("file-changes");
 		},
-		message(_ws, _message) {},
+		message(ws, message) {},
 		close(ws) {
 			ws.unsubscribe("file-changes");
 		},

@@ -23,7 +23,6 @@ export function MermaidDiagram({ code }: MermaidDiagramProps) {
 	const [copyLabel, setCopyLabel] = useState("Copy");
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: svgRef is a stable ref
 	const handleCopy = useCallback(async () => {
 		if (!svgRef.current) return;
 		const ok = await copySvgToClipboard(svgRef.current);
@@ -33,7 +32,6 @@ export function MermaidDiagram({ code }: MermaidDiagramProps) {
 		}
 	}, []);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: svgRef is a stable ref
 	const handleDownloadPng = useCallback(async () => {
 		if (!svgRef.current) return;
 		await downloadAsPng(svgRef.current, "diagram");
@@ -101,7 +99,6 @@ function ToolbarButton({
 }) {
 	return (
 		<button
-			type="button"
 			onClick={onClick}
 			title={title}
 			className="flex items-center gap-1 px-2 py-1 bg-transparent border-none rounded-md text-text-secondary text-xs cursor-pointer hover:bg-bg-hover hover:text-text-primary transition-colors"
