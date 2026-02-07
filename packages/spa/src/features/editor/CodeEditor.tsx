@@ -1,10 +1,8 @@
 import { useCodeMirror } from "./useCodeMirror";
 import { useImperativeHandle, forwardRef } from "react";
-import type { Theme } from "@/types/file";
 
 interface CodeEditorProps {
 	onChange: (content: string) => void;
-	theme: Theme;
 }
 
 export interface CodeEditorHandle {
@@ -13,9 +11,9 @@ export interface CodeEditorHandle {
 }
 
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
-	function CodeEditor({ onChange, theme }, ref) {
+	function CodeEditor({ onChange }, ref) {
 		const { containerRef, setEditorContent, getEditorContent } =
-			useCodeMirror({ onChange, theme });
+			useCodeMirror({ onChange });
 
 		useImperativeHandle(ref, () => ({
 			setContent: setEditorContent,
