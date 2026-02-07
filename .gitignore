@@ -6,7 +6,7 @@ out
 dist
 public
 *.tgz
-packages/spa/dist
+src/client/main.js
 
 # code coverage
 coverage
