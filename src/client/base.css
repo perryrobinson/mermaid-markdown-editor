@@ -1,0 +1,63 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Theme Toggle Icons */
+.theme-icon-light,
+[data-theme="light"] .theme-icon-light {
+  display: inline-block;
+}
+
+.theme-icon-dark,
+[data-theme="light"] .theme-icon-dark {
+  display: none;
+}
+
+[data-theme="dark"] .theme-icon-dark {
+  display: inline-block;
+}
+
+[data-theme="dark"] .theme-icon-light {
+  display: none;
+}

@@ -1,0 +1,142 @@
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
+}
+
+.toolbar-left, .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-color);
+}
+
+.btn:active {
+  background: var(--bg-primary);
+}
+
+.btn svg {
+  flex-shrink: 0;
+}
+
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Dropdown Menu */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-trigger {
+  position: relative;
+}
+
+.dropdown-arrow {
+  margin-left: 2px;
+  opacity: 0.7;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.dropdown.open .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-hover);
+}
+
+.dropdown-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.dropdown-item .shortcut {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.file-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-left: 8px;
+}
+
+.file-status.dirty::before {
+  content: "●";
+  color: var(--warning-color);
+  margin-right: 4px;
+}
+
+.file-status.saved::before {
+  content: "✓";
+  color: var(--success-color);
+  margin-right: 4px;
+}
+
+.file-status.syncing::before {
+  content: "↻";
+  color: var(--accent-color);
+  margin-right: 4px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

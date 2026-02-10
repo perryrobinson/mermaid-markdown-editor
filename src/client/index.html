@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mermaid Markdown Editor</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="base.css">
 </head>
 <body>
   <div id="app">
@@ -97,7 +98,12 @@
     </header>
 
     <div class="tab-bar" id="tab-bar">
-      <div class="tabs" id="tabs"></div>
+      <button class="tab-scroll-btn tab-scroll-left" id="tab-scroll-left">&lsaquo;</button>
+      <div class="tabs-wrapper" id="tabs-wrapper">
+        <div class="tabs" id="tabs"></div>
+      </div>
+      <button class="tab-scroll-btn tab-scroll-right" id="tab-scroll-right">&rsaquo;</button>
+      <button class="tab-list-btn" id="tab-list-btn" title="All tabs">&ctdot;</button>
     </div>
 
     <main class="main-content">

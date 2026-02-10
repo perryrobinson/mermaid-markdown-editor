@@ -2,6 +2,7 @@ import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
+import "./editor.css";
 
 let editorView: EditorView | null = null;
 let changeCallback: ((content: string) => void) | null = null;

@@ -1,5 +1,6 @@
 import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
+import "./preview.css";
 
 // Current mermaid theme
 let currentMermaidTheme: "dark" | "default" = "default";

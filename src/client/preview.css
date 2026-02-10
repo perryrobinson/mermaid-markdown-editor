@@ -1,0 +1,156 @@
+/* Preview Content */
+.preview-content {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.preview-content h1,
+.preview-content h2,
+.preview-content h3,
+.preview-content h4,
+.preview-content h5,
+.preview-content h6 {
+  margin: 1.5em 0 0.5em;
+  color: var(--text-primary);
+}
+
+.preview-content h1 { font-size: 2em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+.preview-content h2 { font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+.preview-content h3 { font-size: 1.25em; }
+
+.preview-content p {
+  margin: 1em 0;
+  line-height: 1.6;
+}
+
+.preview-content code {
+  background: var(--bg-tertiary);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+}
+
+.preview-content pre {
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.preview-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.preview-content blockquote {
+  border-left: 4px solid var(--accent-color);
+  margin: 1em 0;
+  padding-left: 1em;
+  color: var(--text-secondary);
+}
+
+.preview-content ul, .preview-content ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.preview-content li {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.preview-content a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.preview-content a:hover {
+  text-decoration: underline;
+}
+
+.preview-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.preview-content th, .preview-content td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.preview-content th {
+  background: var(--bg-secondary);
+}
+
+.preview-content hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 2em 0;
+}
+
+/* Mermaid Diagram Container */
+.mermaid-container {
+  position: relative;
+  margin: 1.5em 0;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mermaid-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mermaid-toolbar button {
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mermaid-toolbar button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.mermaid-toolbar .toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color);
+  margin: 0 4px;
+}
+
+.mermaid-viewport {
+  width: 100%;
+  min-height: 200px;
+  max-height: 600px;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.mermaid-viewport:active {
+  cursor: grabbing;
+}
+
+.mermaid-error {
+  padding: 16px;
+  color: var(--error-color);
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+}

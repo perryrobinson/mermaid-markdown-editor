@@ -1,0 +1,241 @@
+/* Drop Overlay */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.drop-overlay.visible {
+  display: flex;
+}
+
+.drop-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  background: var(--bg-secondary);
+  border: 2px dashed var(--accent-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.drop-message svg {
+  color: var(--accent-color);
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h2 {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.empty-state-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.empty-state-actions .btn {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+/* Conflict Dialog */
+.conflict-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.conflict-content {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.conflict-content h3 {
+  margin-bottom: 12px;
+  color: var(--warning-color);
+}
+
+.conflict-content p {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.conflict-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.conflict-actions .btn-primary {
+  background: var(--accent-color);
+  color: #000;
+  border-color: var(--accent-color);
+}
+
+.conflict-actions .btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* Confirm Dialog (close unsaved tab) */
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-content {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.confirm-content h3 {
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.confirm-content p {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-danger {
+  background: var(--error-color);
+  color: #fff;
+  border-color: var(--error-color);
+}
+
+.btn-danger:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+
+/* Diagram Full-Screen Overlay */
+.diagram-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.fullscreen-toolbar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.fullscreen-toolbar button {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fullscreen-toolbar button:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-color);
+}
+
+.fullscreen-toolbar .toolbar-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 8px;
+}
+
+.fullscreen-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.fullscreen-close:hover {
+  background: var(--error-color);
+  border-color: var(--error-color);
+  color: #fff;
+}
+
+.fullscreen-viewport {
+  flex: 1;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.fullscreen-viewport:active {
+  cursor: grabbing;
+}

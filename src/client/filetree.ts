@@ -1,3 +1,5 @@
+import "./sidebar.css";
+
 // File System Access API declarations
 declare global {
   interface Window {

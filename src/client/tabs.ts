@@ -1,82 +1,89 @@
+import { bus } from "./eventBus";
+import { registerShortcut } from "./shortcuts";
+import "./tabs.css";
+
 export interface Tab {
-  id: string;
-  path: string;
-  content: string;
-  dirty: boolean;
-  mtime?: number;
+	id: string;
+	path: string;
+	content: string;
+	dirty: boolean;
+	mtime?: number;
 }
 
-type TabSwitchCallback = (tab: Tab) => void;
-type AllTabsClosedCallback = () => void;
-
 export class TabManager {
-  private tabs: Tab[] = [];
-  private activeTabId: string | null = null;
-  private tabSwitchCallback: TabSwitchCallback | null = null;
-  private allTabsClosedCallback: AllTabsClosedCallback | null = null;
-  private nextId = 1;
+	private tabs: Tab[] = [];
+	private activeTabId: string | null = null;
+	private nextId = 1;
 
-  constructor() {
-    this.loadRecentFiles();
-    this.renderTabs();
-  }
+	// Overflow elements
+	private wrapper: HTMLElement | null = null;
+	private scrollLeftBtn: HTMLElement | null = null;
+	private scrollRightBtn: HTMLElement | null = null;
+	private listBtn: HTMLElement | null = null;
+	private listDropdown: HTMLElement | null = null;
+	private resizeObserver: ResizeObserver | null = null;
 
-  addTab(path: string, content: string, mtime?: number): Tab {
-    const tab: Tab = {
-      id: `tab-${this.nextId++}`,
-      path,
-      content,
-      dirty: false,
-      mtime,
-    };
+	constructor() {
+		this.loadRecentFiles();
+		this.initOverflow();
+		this.renderTabs();
+		this.registerShortcuts();
+	}
 
-    this.tabs.push(tab);
-    this.activeTabId = tab.id;
-    this.saveRecentFiles();
-    this.renderTabs();
+	addTab(path: string, content: string, mtime?: number): Tab {
+		const tab: Tab = {
+			id: `tab-${this.nextId++}`,
+			path,
+			content,
+			dirty: false,
+			mtime,
+		};
 
-    return tab;
-  }
+		this.tabs.push(tab);
+		this.activeTabId = tab.id;
+		this.saveRecentFiles();
+		this.renderTabs();
 
-  removeTab(id: string, force: boolean = false): void {
-    const index = this.tabs.findIndex((t) => t.id === id);
-    if (index === -1) return;
+		bus.emit("tab:add", { tab });
+		return tab;
+	}
 
-    const tab = this.tabs[index];
-    if (!tab) return;
+	removeTab(id: string, force = false): void {
+		const index = this.tabs.findIndex((t) => t.id === id);
+		if (index === -1) return;
 
-    // Check if tab is dirty (unless force closing)
-    if (tab.dirty && !force) {
-      this.showCloseConfirmDialog(tab, () => {
-        this.removeTab(id, true);
-      });
-      return;
-    }
+		const tab = this.tabs[index];
+		if (!tab) return;
 
-    this.tabs.splice(index, 1);
+		if (tab.dirty && !force) {
+			this.showCloseConfirmDialog(tab, () => {
+				this.removeTab(id, true);
+			});
+			return;
+		}
 
-    // If closing active tab, switch to another
-    if (this.activeTabId === id) {
-      if (this.tabs.length > 0) {
-        const newIndex = Math.min(index, this.tabs.length - 1);
-        const nextTab = this.tabs[newIndex];
-        if (nextTab) this.switchToTab(nextTab.id);
-      } else {
-        this.activeTabId = null;
-        if (this.allTabsClosedCallback) {
-          this.allTabsClosedCallback();
-        }
-      }
-    }
+		this.tabs.splice(index, 1);
+		bus.emit("tab:remove", { tabId: id });
 
-    this.saveRecentFiles();
-    this.renderTabs();
-  }
+		if (this.activeTabId === id) {
+			if (this.tabs.length > 0) {
+				const newIndex = Math.min(index, this.tabs.length - 1);
+				const nextTab = this.tabs[newIndex];
+				if (nextTab) this.switchToTab(nextTab.id);
+			} else {
+				this.activeTabId = null;
+				bus.emit("tab:allClosed");
+			}
+		}
 
-  private showCloseConfirmDialog(tab: Tab, onConfirm: () => void): void {
-    const dialog = document.createElement("div");
-    dialog.className = "confirm-dialog";
-    dialog.innerHTML = `
+		this.saveRecentFiles();
+		this.renderTabs();
+	}
+
+	private showCloseConfirmDialog(tab: Tab, onConfirm: () => void): void {
+		const dialog = document.createElement("div");
+		dialog.className = "confirm-dialog";
+		dialog.innerHTML = `
       <div class="confirm-content">
         <h3>Unsaved Changes</h3>
         <p>"${this.getTabName(tab.path)}" has unsaved changes. Close anyway?</p>
@@ -87,75 +94,243 @@ export class TabManager {
       </div>
     `;
 
-    document.body.appendChild(dialog);
+		document.body.appendChild(dialog);
 
-    dialog.querySelector("#confirm-cancel")?.addEventListener("click", () => {
-      dialog.remove();
-    });
+		dialog.querySelector("#confirm-cancel")?.addEventListener("click", () => {
+			dialog.remove();
+		});
 
-    dialog.querySelector("#confirm-close")?.addEventListener("click", () => {
-      dialog.remove();
-      onConfirm();
-    });
+		dialog
+			.querySelector("#confirm-close")
+			?.addEventListener("click", () => {
+				dialog.remove();
+				onConfirm();
+			});
 
-    // Close on backdrop click
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog) {
-        dialog.remove();
-      }
-    });
-  }
+		dialog.addEventListener("click", (e) => {
+			if (e.target === dialog) {
+				dialog.remove();
+			}
+		});
+	}
 
-  switchToTab(id: string): void {
-    const tab = this.tabs.find((t) => t.id === id);
-    if (!tab) return;
+	switchToTab(id: string): void {
+		const tab = this.tabs.find((t) => t.id === id);
+		if (!tab) return;
 
-    this.activeTabId = id;
-    this.renderTabs();
+		this.activeTabId = id;
+		this.renderTabs();
 
-    if (this.tabSwitchCallback) {
-      this.tabSwitchCallback(tab);
-    }
-  }
+		bus.emit("tab:switch", { tab });
+	}
 
-  getActiveTab(): Tab | null {
-    return this.tabs.find((t) => t.id === this.activeTabId) || null;
-  }
+	getActiveTab(): Tab | null {
+		return this.tabs.find((t) => t.id === this.activeTabId) || null;
+	}
 
-  findTabByPath(path: string): Tab | undefined {
-    return this.tabs.find((t) => t.path === path);
-  }
+	getAllTabs(): Tab[] {
+		return [...this.tabs];
+	}
 
-  onTabSwitch(callback: TabSwitchCallback): void {
-    this.tabSwitchCallback = callback;
-  }
+	findTabByPath(path: string): Tab | undefined {
+		return this.tabs.find((t) => t.path === path);
+	}
 
-  onAllTabsClosed(callback: AllTabsClosedCallback): void {
-    this.allTabsClosedCallback = callback;
-  }
+	hasDirtyTabs(): boolean {
+		return this.tabs.some((t) => t.dirty);
+	}
 
-  hasDirtyTabs(): boolean {
-    return this.tabs.some((t) => t.dirty);
-  }
+	updateTabDisplay(): void {
+		this.renderTabs();
+	}
 
-  updateTabDisplay(): void {
-    this.renderTabs();
-  }
+	private getTabName(path: string): string {
+		return path.split("/").pop() || path;
+	}
 
-  private getTabName(path: string): string {
-    return path.split("/").pop() || path;
-  }
+	// --- Overflow ---
 
-  private renderTabs(): void {
-    const container = document.getElementById("tabs");
-    if (!container) return;
+	private initOverflow(): void {
+		this.wrapper = document.getElementById("tabs-wrapper");
+		this.scrollLeftBtn = document.getElementById("tab-scroll-left");
+		this.scrollRightBtn = document.getElementById("tab-scroll-right");
+		this.listBtn = document.getElementById("tab-list-btn");
 
-    container.innerHTML = "";
+		// Create dropdown
+		this.listDropdown = document.createElement("div");
+		this.listDropdown.className = "tab-list-dropdown";
+		const tabBar = document.getElementById("tab-bar");
+		if (tabBar) {
+			tabBar.style.position = "relative";
+			tabBar.appendChild(this.listDropdown);
+		}
 
-    for (const tab of this.tabs) {
-      const tabElement = document.createElement("div");
-      tabElement.className = `tab${tab.id === this.activeTabId ? " active" : ""}${tab.dirty ? " dirty" : ""}`;
-      tabElement.innerHTML = `
+		// Scroll buttons
+		this.scrollLeftBtn?.addEventListener("click", () => {
+			this.wrapper?.querySelector(".tabs")?.scrollBy({ left: -200, behavior: "smooth" });
+		});
+		this.scrollRightBtn?.addEventListener("click", () => {
+			this.wrapper?.querySelector(".tabs")?.scrollBy({ left: 200, behavior: "smooth" });
+		});
+
+		// Mouse wheel on wrapper
+		this.wrapper?.addEventListener("wheel", (e) => {
+			const tabs = this.wrapper?.querySelector(".tabs");
+			if (!tabs) return;
+			e.preventDefault();
+			tabs.scrollLeft += e.deltaY;
+		}, { passive: false });
+
+		// Tab list dropdown toggle
+		this.listBtn?.addEventListener("click", (e) => {
+			e.stopPropagation();
+			this.toggleDropdown();
+		});
+
+		// Close dropdown on outside click
+		document.addEventListener("click", () => {
+			this.listDropdown?.classList.remove("open");
+		});
+
+		// Scroll event for updating button states
+		const tabsEl = this.wrapper?.querySelector(".tabs");
+		tabsEl?.addEventListener("scroll", () => {
+			this.updateScrollButtons();
+		});
+
+		// ResizeObserver
+		if (this.wrapper) {
+			this.resizeObserver = new ResizeObserver(() => {
+				this.updateOverflowState();
+			});
+			this.resizeObserver.observe(this.wrapper);
+		}
+	}
+
+	private updateOverflowState(): void {
+		const tabsEl = this.wrapper?.querySelector(".tabs") as HTMLElement;
+		if (!tabsEl) return;
+
+		const isOverflowing = tabsEl.scrollWidth > tabsEl.clientWidth;
+
+		this.scrollLeftBtn?.classList.toggle("visible", isOverflowing);
+		this.scrollRightBtn?.classList.toggle("visible", isOverflowing);
+		this.listBtn?.classList.toggle("visible", this.tabs.length > 0);
+
+		this.updateScrollButtons();
+	}
+
+	private updateScrollButtons(): void {
+		const tabsEl = this.wrapper?.querySelector(".tabs") as HTMLElement;
+		if (!tabsEl) return;
+
+		const atStart = tabsEl.scrollLeft <= 0;
+		const atEnd =
+			tabsEl.scrollLeft + tabsEl.clientWidth >= tabsEl.scrollWidth - 1;
+
+		if (this.scrollLeftBtn) {
+			(this.scrollLeftBtn as HTMLButtonElement).disabled = atStart;
+		}
+		if (this.scrollRightBtn) {
+			(this.scrollRightBtn as HTMLButtonElement).disabled = atEnd;
+		}
+	}
+
+	private scrollActiveTabIntoView(): void {
+		const tabsEl = this.wrapper?.querySelector(".tabs") as HTMLElement;
+		if (!tabsEl) return;
+
+		const activeEl = tabsEl.querySelector(".tab.active") as HTMLElement;
+		if (!activeEl) return;
+
+		const tabsRect = tabsEl.getBoundingClientRect();
+		const activeRect = activeEl.getBoundingClientRect();
+
+		if (activeRect.left < tabsRect.left) {
+			tabsEl.scrollBy({
+				left: activeRect.left - tabsRect.left - 8,
+				behavior: "smooth",
+			});
+		} else if (activeRect.right > tabsRect.right) {
+			tabsEl.scrollBy({
+				left: activeRect.right - tabsRect.right + 8,
+				behavior: "smooth",
+			});
+		}
+	}
+
+	private toggleDropdown(): void {
+		if (!this.listDropdown) return;
+
+		const isOpen = this.listDropdown.classList.toggle("open");
+		if (isOpen) {
+			this.renderDropdown();
+		}
+	}
+
+	private renderDropdown(): void {
+		if (!this.listDropdown) return;
+
+		this.listDropdown.innerHTML = "";
+		for (const tab of this.tabs) {
+			const item = document.createElement("button");
+			item.className = `tab-list-item${tab.id === this.activeTabId ? " active" : ""}`;
+
+			const name = document.createElement("span");
+			name.textContent = this.getTabName(tab.path);
+			item.appendChild(name);
+
+			if (tab.dirty) {
+				const dot = document.createElement("span");
+				dot.className = "dirty-indicator";
+				dot.textContent = "\u25CF";
+				item.appendChild(dot);
+			}
+
+			item.title = tab.path;
+			item.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.switchToTab(tab.id);
+				this.listDropdown?.classList.remove("open");
+			});
+
+			this.listDropdown.appendChild(item);
+		}
+	}
+
+	private registerShortcuts(): void {
+		registerShortcut({ key: "Tab", ctrl: true }, () => {
+			this.cycleTab(1);
+		});
+		registerShortcut({ key: "Tab", ctrl: true, shift: true }, () => {
+			this.cycleTab(-1);
+		});
+	}
+
+	private cycleTab(direction: number): void {
+		if (this.tabs.length <= 1) return;
+		const currentIndex = this.tabs.findIndex(
+			(t) => t.id === this.activeTabId,
+		);
+		if (currentIndex === -1) return;
+		const next =
+			(currentIndex + direction + this.tabs.length) % this.tabs.length;
+		const nextTab = this.tabs[next];
+		if (nextTab) this.switchToTab(nextTab.id);
+	}
+
+	// --- Rendering ---
+
+	private renderTabs(): void {
+		const container = document.getElementById("tabs");
+		if (!container) return;
+
+		container.innerHTML = "";
+
+		for (const tab of this.tabs) {
+			const tabElement = document.createElement("div");
+			tabElement.className = `tab${tab.id === this.activeTabId ? " active" : ""}${tab.dirty ? " dirty" : ""}`;
+			tabElement.innerHTML = `
         <span class="tab-title" title="${tab.path}">${this.getTabName(tab.path)}</span>
         <span class="tab-close" title="Close">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -165,40 +340,46 @@ export class TabManager {
         </span>
       `;
 
-      tabElement.addEventListener("click", (e) => {
-        if ((e.target as HTMLElement).closest(".tab-close")) {
-          this.removeTab(tab.id);
-        } else {
-          this.switchToTab(tab.id);
-        }
-      });
+			tabElement.addEventListener("click", (e) => {
+				if ((e.target as HTMLElement).closest(".tab-close")) {
+					this.removeTab(tab.id);
+				} else {
+					this.switchToTab(tab.id);
+				}
+			});
 
-      // Middle-click to close
-      tabElement.addEventListener("auxclick", (e) => {
-        if (e.button === 1) {
-          this.removeTab(tab.id);
-        }
-      });
+			tabElement.addEventListener("auxclick", (e) => {
+				if (e.button === 1) {
+					this.removeTab(tab.id);
+				}
+			});
 
-      container.appendChild(tabElement);
-    }
-  }
+			container.appendChild(tabElement);
+		}
 
-  private saveRecentFiles(): void {
-    const recentPaths = this.tabs.map((t) => t.path).slice(-10);
-    localStorage.setItem("mermaid-editor-recent", JSON.stringify(recentPaths));
-  }
+		// After rendering, update overflow and scroll active tab into view
+		requestAnimationFrame(() => {
+			this.updateOverflowState();
+			this.scrollActiveTabIntoView();
+		});
+	}
 
-  private loadRecentFiles(): void {
-    // Just load the paths for reference, don't actually open them
-    try {
-      const stored = localStorage.getItem("mermaid-editor-recent");
-      if (stored) {
-        // Could be used to show a recent files menu
-        JSON.parse(stored);
-      }
-    } catch {
-      // Ignore errors
-    }
-  }
+	private saveRecentFiles(): void {
+		const recentPaths = this.tabs.map((t) => t.path).slice(-10);
+		localStorage.setItem(
+			"mermaid-editor-recent",
+			JSON.stringify(recentPaths),
+		);
+	}
+
+	private loadRecentFiles(): void {
+		try {
+			const stored = localStorage.getItem("mermaid-editor-recent");
+			if (stored) {
+				JSON.parse(stored);
+			}
+		} catch {
+			// Ignore errors
+		}
+	}
 }
