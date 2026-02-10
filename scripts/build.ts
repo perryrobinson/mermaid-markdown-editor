@@ -15,19 +15,19 @@ const ext = platform === "windows" ? ".exe" : "";
 console.log(`Building ${name} v${version} for ${platform}...`);
 
 try {
-  // Build client
-  console.log("Building client...");
-  execSync("bun run build:client", { cwd: projectRoot, stdio: "inherit" });
+  // Typecheck
+  console.log("Running typecheck...");
+  execSync("bun run typecheck", { cwd: projectRoot, stdio: "inherit" });
 
-  // Create dist directory
-  console.log("Creating dist directory...");
-  const distPath = resolve(projectRoot, "dist");
+  // Create dist/bin directory
+  console.log("Creating dist/bin directory...");
+  const distPath = resolve(projectRoot, "dist/bin");
   if (!existsSync(distPath)) {
     mkdirSync(distPath, { recursive: true });
   }
 
-  // Build executable
-  const outputFile = `dist/${name}-v${version}-${platform}${ext}`;
+  // Build executable (bun build --compile follows the HTML import and bundles frontend automatically)
+  const outputFile = `dist/bin/${name}-v${version}-${platform}${ext}`;
   console.log(`Compiling to ${outputFile}...`);
   execSync(
     `bun build --compile src/server/index.ts --outfile ${outputFile}`,
@@ -35,7 +35,7 @@ try {
   );
 
   // Create a latest copy
-  const latestFile = `dist/${name}-latest-${platform}${ext}`;
+  const latestFile = `dist/bin/${name}-latest-${platform}${ext}`;
   console.log(`Creating latest copy...`);
   copyFileSync(
     resolve(projectRoot, outputFile),
